@@ -1,0 +1,45 @@
+MODULE ProjectCustom;
+
+REQUIRE Project;
+
+NAMESPACE ProjectManagement;
+
+planStartDate 'Плановый срок начала' = DATA DATE (Project);
+planFinishDate 'Плановый срок окончания' = DATA DATE (Project);
+
+factStartDate 'Фактический срок начала' = DATA DATE (Project);
+factFinishDate 'Фактический срок окончания' = DATA DATE (Project);
+
+contractStartDate 'Договорные сроки начала Контракта' = DATA DATE (Project);
+contractFinishDate 'Договорные сроки начала Контракта' = DATA DATE (Project);
+
+EXTEND FORM projects
+    PROPERTIES (p) READONLY planStartDate, planFinishDate, 
+        factStartDate, factFinishDate, contractStartDate, contractFinishDate
+;
+
+EXTEND FORM project
+    PROPERTIES (p) planStartDate, planFinishDate, 
+        factStartDate, factFinishDate, contractStartDate, contractFinishDate, 
+        archived ON CHANGE {
+            IF archived(p) THEN endDate(p) <- NULL;
+            ELSE endDate(p) <- sum(currentDate(), -1);
+        }
+;
+DESIGN project{
+    header{
+        headerRight{
+            REMOVE PROPERTY (startDate(p));
+            PROPERTY (endDate(p)) {caption = 'Дата архивирования'; }
+            MOVE PROPERTY (archived(p)) {caption = 'Архивный'; }
+        }
+        NEW dates{
+            MOVE PROPERTY (planStartDate(p));
+            MOVE PROPERTY (planFinishDate(p));
+            MOVE PROPERTY (factStartDate(p));
+            MOVE PROPERTY (factFinishDate(p));
+            MOVE PROPERTY (contractStartDate(p));
+            MOVE PROPERTY (contractFinishDate(p));
+        }
+    }
+}
