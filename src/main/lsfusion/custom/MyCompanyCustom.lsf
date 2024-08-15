@@ -1,0 +1,3 @@
+MODULE MyCompanyCustom;
+
+REQUIRE ItemAttribute, ProjectCustom;
