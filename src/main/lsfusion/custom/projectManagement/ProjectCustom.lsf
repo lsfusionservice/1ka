@@ -4,42 +4,61 @@ REQUIRE Project;
 
 NAMESPACE ProjectManagement;
 
+changeDate 'Дата изменения' = DATA DATE (Project);
+contractStartDate 'Договорные сроки начала Контракта' = DATA DATE (Project);
+contractFinishDate 'Договорные сроки окончания Контракта' = DATA DATE (Project);
 planStartDate 'Плановый срок начала' = DATA DATE (Project);
 planFinishDate 'Плановый срок окончания' = DATA DATE (Project);
-
 factStartDate 'Фактический срок начала' = DATA DATE (Project);
 factFinishDate 'Фактический срок окончания' = DATA DATE (Project);
+contractDate 'Дата договора' = DATA DATE (Project);
+projectAdmin 'Администратор проекта' = DATA Employee	(Project);
+nameProjectAdmin 'Администратор проекта' (Project o) = MasterData.name(projectAdmin(o));
 
-contractStartDate 'Договорные сроки начала Контракта' = DATA DATE (Project);
-contractFinishDate 'Договорные сроки начала Контракта' = DATA DATE (Project);
+warrantyObligations 'Гарантийные обязательства' = DATA BOOLEAN (Project);
+warrantyStartDate 'Срок начала действия гарантии'	 = DATA DATE (Project); //при установке признака Гарантийные обязательства
+warrantyFinishDate 'Срок окончания действия гарантии' = DATA DATE (Project); //при установке признака Гарантийные обязательства
 
 EXTEND FORM projects
-    PROPERTIES (p) READONLY planStartDate, planFinishDate, 
-        factStartDate, factFinishDate, contractStartDate, contractFinishDate
+    PROPERTIES (p) READONLY changeDate, contractDate,
+        contractStartDate, contractFinishDate, planStartDate, planFinishDate, factStartDate, factFinishDate,
+        nameProjectAdmin, 
+        warrantyObligations, warrantyStartDate, warrantyFinishDate 
 ;
 
 EXTEND FORM project
-    PROPERTIES (p) planStartDate, planFinishDate, 
-        factStartDate, factFinishDate, contractStartDate, contractFinishDate, 
+    PROPERTIES (p) changeDate,
+        contractStartDate, contractFinishDate, planStartDate, planFinishDate, factStartDate, factFinishDate,
+        contractDate, nameProjectAdmin,         
         archived ON CHANGE {
             IF archived(p) THEN endDate(p) <- NULL;
             ELSE endDate(p) <- sum(currentDate(), -1);
-        }
+        },
+        warrantyObligations, warrantyStartDate SHOWIF warrantyObligations(p), warrantyFinishDate SHOWIF warrantyObligations(p)    
 ;
 DESIGN project{
     header{
         headerRight{
             REMOVE PROPERTY (startDate(p));
-            PROPERTY (endDate(p)) {caption = 'Дата архивирования'; }
+            MOVE PROPERTY (nameProjectAdmin(p));
             MOVE PROPERTY (archived(p)) {caption = 'Архивный'; }
         }
         NEW dates{
+            MOVE PROPERTY (endDate(p)) {caption = 'Дата архивирования'; }
+            MOVE PROPERTY (changeDate(p));
+            MOVE PROPERTY (contractDate(p));
+            MOVE PROPERTY (contractStartDate(p));
+            MOVE PROPERTY (contractFinishDate(p));
             MOVE PROPERTY (planStartDate(p));
             MOVE PROPERTY (planFinishDate(p));
             MOVE PROPERTY (factStartDate(p));
-            MOVE PROPERTY (factFinishDate(p));
-            MOVE PROPERTY (contractStartDate(p));
-            MOVE PROPERTY (contractFinishDate(p));
+            MOVE PROPERTY (factFinishDate(p));            
         }
+        NEW warrantyObligations {
+            MOVE PROPERTY (warrantyObligations(p));
+            MOVE PROPERTY (warrantyStartDate(p));
+            MOVE PROPERTY (warrantyFinishDate(p));
+        }
+        
     }
 }
