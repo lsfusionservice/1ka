@@ -4,7 +4,6 @@ REQUIRE Project;
 
 NAMESPACE ProjectManagement;
 
-changeDate 'Дата изменения' = DATA DATE (Project);
 contractStartDate 'Договорные сроки начала Контракта' = DATA DATE (Project);
 contractFinishDate 'Договорные сроки окончания Контракта' = DATA DATE (Project);
 planStartDate 'Плановый срок начала' = DATA DATE (Project);
@@ -19,6 +18,49 @@ warrantyObligations 'Гарантийные обязательства' = DATA B
 warrantyStartDate 'Срок начала действия гарантии'	 = DATA DATE (Project); //при установке признака Гарантийные обязательства
 warrantyFinishDate 'Срок окончания действия гарантии' = DATA DATE (Project); //при установке признака Гарантийные обязательства
 
+// история
+CLASS ProjectHistory 'Change history';
+
+project = DATA Project (ProjectHistory) INDEXED;
+countHistories (Project d) = GROUP SUM 1 IF project(ProjectHistory h) = d;
+
+dateTime 'Date' = DATA DATETIME (ProjectHistory);
+
+user = DATA User (ProjectHistory);
+nameUser 'User' (ProjectHistory l) = name(user(l));
+
+computer = DATA Computer (ProjectHistory);
+hostnameComputer 'Computer' (ProjectHistory l) = hostname(computer(l)) CHARWIDTH 10;
+
+type 'Type' = DATA ISTRING[100] (ProjectHistory) CHARWIDTH 15;
+description 'Description' = DATA TEXT (ProjectHistory);
+
+@defineHistoryProperty(project, type, 'Тип', nameType);
+@defineHistoryProperty(project, status, 'Статус', nameStatus);
+@defineHistoryProperty(project, partner, 'Контрагент', namePartner);
+@defineHistoryProperty(project, company, 'Компания', nameCompany);
+@defineHistoryProperty(project, manager, 'Менеджер', nameManager);
+@defineHistoryProperty(project, projectAdmin, 'Администратор проекта', nameProjectAdmin);
+
+@defineHistoryProperty(project, number, 'Номер');
+@defineHistoryProperty(project, name, 'Имя');
+@defineHistoryProperty(project, archived, 'Архивный');
+@defineHistoryProperty(project, endDate, 'Дата архивирования');
+@defineHistoryProperty(project, contractDate, 'Дата договора');
+@defineHistoryProperty(project, contractStartDate, 'Договорные сроки начала Контракта');
+@defineHistoryProperty(project, contractFinishDate, 'Договорные сроки окончания Контракта');
+@defineHistoryProperty(project, planStartDate, 'Плановый срок начала');
+@defineHistoryProperty(project, planFinishDate, 'Плановый срок окончания');
+@defineHistoryProperty(project, factStartDate, 'Фактический срок начала');
+@defineHistoryProperty(project, factFinishDate, 'Фактический срок окончания');
+@defineHistoryProperty(project, warrantyObligations, 'Гарантийные обязательства');
+@defineHistoryProperty(project, warrantyStartDate, 'Срок начала действия гарантии');
+@defineHistoryProperty(project, warrantyFinishDate, 'Срок окончания действия гарантии');
+
+@defineDocHistoryForm(project, project, p);
+
+changeDate 'Дата изменения' (Project p) = GROUP LAST dateTime(ProjectHistory ph) IF project(ph) = p ORDER dateTime(ph), ph;
+
 EXTEND FORM projects
     PROPERTIES (p) READONLY changeDate, contractDate,
         contractStartDate, contractFinishDate, planStartDate, planFinishDate, factStartDate, factFinishDate,
@@ -27,7 +69,7 @@ EXTEND FORM projects
 ;
 
 EXTEND FORM project
-    PROPERTIES (p) changeDate,
+    PROPERTIES (p) changeDate READONLY,
         contractStartDate, contractFinishDate, planStartDate, planFinishDate, factStartDate, factFinishDate,
         contractDate, nameProjectAdmin,         
         archived ON CHANGE {
@@ -44,8 +86,8 @@ DESIGN project{
             MOVE PROPERTY (archived(p)) {caption = 'Архивный'; }
         }
         NEW dates{
-            MOVE PROPERTY (endDate(p)) {caption = 'Дата архивирования'; }
             MOVE PROPERTY (changeDate(p));
+            MOVE PROPERTY (endDate(p)) {caption = 'Дата архивирования'; }
             MOVE PROPERTY (contractDate(p));
             MOVE PROPERTY (contractStartDate(p));
             MOVE PROPERTY (contractFinishDate(p));
