@@ -1,0 +1,41 @@
+MODULE ProjectLegalEntityRoleCustom;
+
+REQUIRE LegalEntity;
+
+NAMESPACE ProjectManagement;
+
+CLASS ProjectLegalEntityRole 'Роль контрагента в проекте';
+
+id '{ID}' = DATA STRING[50] (ProjectLegalEntityRole) IN id CHARWIDTH 6;
+name '{Name}' = DATA ISTRING[100] (ProjectLegalEntityRole) IN id CHARWIDTH 15;
+
+FORM projectLegalEntityRole 'Роль контрагента в проекте'
+    OBJECTS r = ProjectLegalEntityRole PANEL
+    PROPERTIES(r) id, name
+
+    EDIT ProjectLegalEntityRole OBJECT r
+;
+
+DESIGN projectLegalEntityRole {
+    OBJECTS {
+        NEW header {
+            horizontal = TRUE;
+            MOVE PROPERTY(id(r));
+            MOVE PROPERTY(name(r));
+        }
+    }
+}
+
+FORM projectLegalEntityRoles 'Роли контрагента в проекте'
+    OBJECTS r = ProjectLegalEntityRole
+    PROPERTIES(r) READONLYIF isReadonly() name, id
+    PROPERTIES(r) NEWSESSION NEW, EDIT, DELETE
+
+    LIST ProjectLegalEntityRole OBJECT r
+;
+
+NAVIGATOR {
+    masterData {
+        NEW projectLegalEntityRoles;
+    }
+}

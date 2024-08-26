@@ -1,4 +1,6 @@
 MODULE MyCompanyCustom;
 
 REQUIRE Eval, ProcessMonitor, Backup,
-        ItemAttribute, ProjectCustom;
+        ItemAttribute, ProjectCustom,
+
+        ProjectLegalEntityRoleCustom;

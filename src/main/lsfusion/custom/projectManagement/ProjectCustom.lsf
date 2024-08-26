@@ -1,6 +1,6 @@
 MODULE ProjectCustom;
 
-REQUIRE Project;
+REQUIRE Project, ProjectLegalEntityRoleCustom;
 
 NAMESPACE ProjectManagement;
 
@@ -61,11 +61,14 @@ description 'Description' = DATA TEXT (ProjectHistory);
 
 changeDate 'Дата изменения' (Project p) = GROUP LAST dateTime(ProjectHistory ph) IF project(ph) = p ORDER dateTime(ph), ph;
 
+projectLegalEntityRole 'Роль' = DATA ProjectLegalEntityRole (Project, LegalEntity);
+nameRole 'Роль' (Project p, LegalEntity le) = name(projectLegalEntityRole(p, le));
+
 EXTEND FORM projects
     PROPERTIES (p) READONLY changeDate, contractDate,
         contractStartDate, contractFinishDate, planStartDate, planFinishDate, factStartDate, factFinishDate,
         nameProjectAdmin, 
-        warrantyObligations, warrantyStartDate, warrantyFinishDate 
+        warrantyObligations, warrantyStartDate, warrantyFinishDate
 ;
 
 EXTEND FORM project
@@ -77,6 +80,10 @@ EXTEND FORM project
             ELSE endDate(p) <- sum(currentDate(), -1);
         },
         warrantyObligations, warrantyStartDate SHOWIF warrantyObligations(p), warrantyFinishDate SHOWIF warrantyObligations(p)    
+    
+    OBJECTS le = LegalEntity
+    PROPERTIES (le) READONLY name
+    PROPERTIES (p, le) nameRole
 ;
 DESIGN project{
     header{
@@ -102,5 +109,17 @@ DESIGN project{
             MOVE PROPERTY (warrantyFinishDate(p));
         }
         
+    }
+
+    details {
+        NEW projectLegalEntityRole {
+            caption = 'Субподряд';
+            fill = 1;
+            
+            MOVE BOX(le) {
+                fill = 2;
+                caption = '';
+            }
+        }
     }
 }
