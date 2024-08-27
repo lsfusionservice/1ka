@@ -1,0 +1,34 @@
+MODULE CategoryCustom;
+
+REQUIRE Category, Item;
+
+NAMESPACE MasterData;
+
+CLASS ItemType 'Тип номенклатуры' {
+    material 'Материал',
+    equipment 'Оборудование'
+}
+
+name 'Тип номенклатуры' (ItemType t) = staticCaption(t) IF t IS ItemType CHARWIDTH 12;
+
+dataItemType 'Тип номенклатуры' = DATA ItemType (Category);
+calcItemType 'Тип номенклатуры' (Category cc) = GROUP MAX dataItemType(Category cp) IF level(cc, cp);
+itemType 'Тип номенклатуры' (Category c) = OVERRIDE dataItemType(c), calcItemType(c);
+nameItemType 'Тип номенклатуры' (Category c) = name(itemType(c));
+
+FORM itemTypes 'Типы номенклатуры'
+    OBJECTS it = ItemType
+    PROPERTIES(it) name
+
+    LIST ItemType OBJECT it
+;
+
+EXTEND FORM category PROPERTIES nameItemType(c);
+DESIGN category {
+    params {
+        MOVE PROPERTY(nameItemType(c));
+    }
+}
+
+EXTEND FORM categories PROPERTIES READONLY nameItemType(c), nameItemType(cc);
+

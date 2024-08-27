@@ -1,0 +1,29 @@
+MODULE ItemCustom;
+
+REQUIRE CategoryCustom, Item;
+
+NAMESPACE MasterData;
+
+dataItemType 'Тип номенклатуры' = DATA ItemType (Item);
+itemType 'Тип номенклатуры' (Item i) = OVERRIDE dataItemType(i), itemType(category(i));
+nameItemType 'Тип номенклатуры' (Item i) = name(itemType(i));
+
+CONSTRAINT SETCHANGED(itemType(Item i)) AND NOT itemType(category(i)) == itemType(i) AND itemType(i) AND itemType(category(i))
+    MESSAGE 'Тип номенклатуры отличается от типа в категории';
+
+CONSTRAINT SETCHANGED(itemType(Category c)) AND (GROUP MIN TRUE IF NOT itemType(Item i) == itemType(c) AND level(category(i), c) AND itemType(i)) 
+    MESSAGE 'Категория содержит номенклатуру с отличным типом';
+
+EXTEND FORM item
+    PROPERTIES (i) nameItemType
+;
+
+EXTEND FORM items
+    PROPERTIES (i) READONLY nameItemType
+;
+
+DESIGN item {
+    header {
+        MOVE PROPERTY (nameItemType(i));
+    }
+}
