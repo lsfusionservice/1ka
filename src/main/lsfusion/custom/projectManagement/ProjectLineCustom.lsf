@@ -1,0 +1,35 @@
+MODULE ProjectLineCustom;
+
+REQUIRE ProjectCustom, ServiceP;
+
+NAMESPACE ProjectManagement;
+
+CLASS ProjectLine 'Строка проекта';
+
+project = DATA Project (ProjectLine) NONULL DELETE;
+index '№' = PARTITION SUM 1 ORDER ProjectLine l BY project(l) IN id MATERIALIZED CHARWIDTH 3;
+
+service = DATA Service (ProjectLine) NONULL;
+nameService 'Service' (ProjectLine l) = name(service(l));
+
+dataUom = DATA Uom (ProjectLine);
+uom (ProjectLine l) = OVERRIDE dataUom(l), uom(service(l));
+nameUom 'UoM' (ProjectLine l) = name(uom(l));
+
+planQuantity 'Плановое количество' = DATA NUMERIC[16,3] (ProjectLine);
+
+EXTEND FORM project
+    OBJECTS l = ProjectLine
+    PROPERTIES(l) index, nameService, nameUom, planQuantity
+    PROPERTIES(l) NEW, DELETE
+    FILTERS project(l) = p
+;
+
+DESIGN project{
+    details {        
+        MOVE BOX(l) {
+            caption = 'Работы';
+        }        
+    }
+}
+

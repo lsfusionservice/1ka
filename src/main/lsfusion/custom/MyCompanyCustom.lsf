@@ -3,4 +3,6 @@ MODULE MyCompanyCustom;
 REQUIRE Eval, ProcessMonitor, Backup,
         ItemAttribute, ProjectCustom,
         ProjectLegalEntityRoleCustom,
-        CategoryCustom, ItemCustom;
+        CategoryCustom, ItemCustom, 
+        ServiceP, 
+        ProjectLineCustom;
