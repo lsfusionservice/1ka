@@ -1,0 +1,150 @@
+MODULE ProjectEquipmentLineCustom;
+
+REQUIRE ProjectCustom, ItemCustom, ProductLot;
+NAMESPACE ProjectManagement;
+
+CLASS ProjectEquipmentLine 'Строка оборудования проекта';
+
+project = DATA Project (ProjectEquipmentLine) NONULL DELETE;
+index '№' = PARTITION SUM 1 ORDER ProjectEquipmentLine l BY project(l) IN id MATERIALIZED CHARWIDTH 3;
+
+item = DATA Item (ProjectEquipmentLine) NONULL;
+nameItem 'Оборудование' (ProjectEquipmentLine l) = name(item(l));
+
+//dataUom = DATA Uom (ProjectEquipmentLine);
+//uom (ProjectEquipmentLine l) = OVERRIDE dataUom(l), uom(item(l));
+//nameUom 'UoM' (ProjectEquipmentLine l) = name(uom(l));
+
+// barcode
+processBarCode ABSTRACT LIST (Project, ProjectEquipmentLine, STRING);
+scanBarCode (Project p, ProjectEquipmentLine l) {
+    INPUT id = STRING DO {
+            consumedBarCode() <- NULL;
+            processBarCode(p, l, id);
+            IF NOT consumedBarCode() THEN
+                MESSAGE 'Barcode not found';
+    }
+}
+
+initialDemand 'Initial demand' = DATA NUMERIC[16,3] (ProjectEquipmentLine);
+equipmentInitialDemand 'Initial demand' (Project p) = GROUP SUM initialDemand(ProjectEquipmentLine l) IF project(l) = p MATERIALIZED;
+
+done 'Quantity (done)' = DATA NUMERIC[16,3] (ProjectEquipmentLine);
+done 'Quantity (done)' = DATA NUMERIC[16,3] (ProjectEquipmentLine, Lot);
+equipmentDone 'Done' = DATA BOOLEAN (Project);
+
+lotsDone 'Lots' (ProjectEquipmentLine l) = 
+    GROUP CONCAT
+        (CONCAT '', id(Lot lot) IF done(l, lot), '(' + (STRING(DOUBLE(done(l, lot))) IF (done(l, lot) != 1)) + ')'), 
+        ',' ORDER lot CHARWIDTH 15; 
+
+doneLot 'Lot quantity (done)' (ProjectEquipmentLine rl) = GROUP SUM done(rl, Lot l);
+doneLotLeft (ProjectEquipmentLine rl) = done(rl) - OVERRIDE doneLot(rl), 0;
+
+doneLot 'Lot initial demand' (Project p) = GROUP SUM done(ProjectEquipmentLine l, Lot lot) IF project(l) = p;
+    
+WHEN LOCAL CHANGED(doneLot(ProjectEquipmentLine el)) AND NOT equipmentDone(project(el)) DO {
+    done(el) <- doneLot(el);
+}
+
+CONSTRAINT done(ProjectEquipmentLine rl, Lot l) AND item(rl) != product(l)
+                MESSAGE 'Document line product is not equal to lot product';
+CONSTRAINT SET(((OVERRIDE done(ProjectEquipmentLine el), 0.0) - doneLot(el) < 0) AND equipmentDone(project(el))) AND useLot(item(el))
+                MESSAGE 'Mismatch between quantity and quantity in lots (done)';
+
+EXTEND FORM project
+    OBJECTS el = ProjectEquipmentLine
+    PROPERTIES(el) index,
+        nameItem ON CHANGE {
+            DIALOG items OBJECTS i = item(el) CHANGE LIST name(i) FILTERS itemType(i) == ItemType.equipment DO item(el) <- i;
+        },
+        initialDemand, done
+    PROPERTIES(el) NEW, DELETE
+    FILTERS project(el) = p
+
+    PROPERTIES barcodeL = barCode() DRAW el TOOLBAR ON CHANGE scanBarCode(p, el)
+
+    OBJECTS lotL = Lot
+    PROPERTIES (lotL) id READONLY
+    PROPERTIES (el, lotL) done READONLYIF NOT useLot(product(lotL))
+    PROPERTIES (lotL) EDIT
+    FILTERS done(el, lotL)
+
+    PROPERTIES (lotL) DELETE GRID
+;
+
+DESIGN project{
+    details {
+        NEW lines {
+            caption = 'Оборудование';
+            horizontal = TRUE;
+            MOVE BOX(el) {caption = '';}
+            NEW linesTab {
+                fill = 0.3;
+                tabbed = TRUE;
+                MOVE BOX(lotL) {caption = 'Lots';}
+            }
+        }
+    }
+}
+
+lastProjectEquipmentLine (Project i, Item p) = GROUP LAST ProjectEquipmentLine l ORDER l BY project(l), item(l);
+
+beforeProcessProjectEquipmentLineLotBarCode ABSTRACT (Project, STRING);
+afterProcessProjectEquipmentLineLotBarCode ABSTRACT (Project, STRING);
+
+processBarCode(Project p, ProjectEquipmentLine rl, STRING s) + {
+    LOCAL lotId = STRING();
+    lotId() <- OVERRIDE barCodeToLotId(s), (s AS STRING);
+
+    IF lot(lotId()) THEN {
+        beforeProcessProjectEquipmentLineLotBarCode(p, lotId());
+
+        LOCAL lot = Lot();
+        lot() <- lot(lotId());
+
+        IF NOT lot() THEN
+            RETURN;
+
+        IF NOT product(lot()) THEN {
+            product(lot()) <- item(rl);
+        }
+
+        LOCAL line = ProjectEquipmentLine();
+
+        IF product(lot()) AND NOT product(lot()) = item(rl) THEN {
+            IF NOT lastProjectEquipmentLine(project(rl), product(lot())) THEN {
+                NEW l = ProjectEquipmentLine {
+                    project(l) <- p;
+                    item(l) <- product(lot());
+                    line() <- l;
+                }
+            } ELSE
+                line() <- lastProjectEquipmentLine(project(rl), product(lot()));
+            SEEK project.el = line();
+        } ELSE
+            line() <- rl;
+
+        done(line(), lot()) <- done(line(), lot()) (+) 1;
+        IF doneLot(line()) > OVERRIDE done(line()), 0 THEN
+            done(line()) <- doneLot(line());
+
+        afterProcessProjectEquipmentLineLotBarCode(p, lotId());
+
+        consumedBarCode() <- TRUE;
+    }
+}
+
+beforeProcessProjectEquipmentLineLotBarCode(Project p, STRING s) + {
+    IF NOT lot(s) THEN {
+        NEW l = Lot {
+            id(l) <- STRING[100](s);
+        }
+    }
+}
+
+afterProcessProjectEquipmentLineLotBarCode(Project p, STRING s) + {
+    SEEK project.lotL = lot(s);
+    ACTIVATE TAB project.BOX(lotL);
+    ACTIVATE PROPERTY project.done(el, lotL);
+}
