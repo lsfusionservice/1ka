@@ -4,5 +4,6 @@ REQUIRE Eval, ProcessMonitor, Backup,
         ItemAttribute, ProjectCustom,
         ProjectLegalEntityRoleCustom,
         CategoryCustom, ItemCustom, 
-        ServiceP, 
-        ProjectLineCustom;
+        ServiceP,
+        ProjectServiceLineCustom, ProjectMaterialLineCustom, ProjectEquipmentLineCustom,
+        InventorySettings, CategoryLot;
