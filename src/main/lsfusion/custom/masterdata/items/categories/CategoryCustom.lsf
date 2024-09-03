@@ -1,18 +1,19 @@
 MODULE CategoryCustom;
 
-REQUIRE Category, Item;
+REQUIRE Category, Item, ServiceP, Product;
 
 NAMESPACE MasterData;
 
 CLASS ItemType 'Тип номенклатуры' {
     material 'Материал',
-    equipment 'Оборудование'
+    equipment 'Оборудование',
+    service 'Работа'
 }
 
 name 'Тип номенклатуры' (ItemType t) = staticCaption(t) IF t IS ItemType CHARWIDTH 12;
 
 dataItemType 'Тип номенклатуры' = DATA ItemType (Category);
-calcItemType 'Тип номенклатуры' (Category cc) = GROUP MAX dataItemType(Category cp) IF level(cc, cp);
+calcItemType 'Тип номенклатуры' (Category cc) = GROUP MAX dataItemType(Category cp) IF level(cc, cp) NONULL;
 itemType 'Тип номенклатуры' (Category c) = OVERRIDE dataItemType(c), calcItemType(c);
 nameItemType 'Тип номенклатуры' (Category c) = name(itemType(c));
 
@@ -31,4 +32,9 @@ DESIGN category {
 }
 
 EXTEND FORM categories PROPERTIES READONLY nameItemType(c), nameItemType(cc);
+
+DESIGN items{
+    PROPERTY (newService(c)) {showIf = itemType(c) == ItemType.service;}
+    PROPERTY (newProduct(c)) {showIf = itemType(c) == ItemType.equipment OR itemType(c) == ItemType.material;}    
+}
 
