@@ -148,3 +148,7 @@ afterProcessProjectEquipmentLineLotBarCode(Project p, STRING s) + {
     ACTIVATE TAB project.BOX(lotL);
     ACTIVATE PROPERTY project.done(el, lotL);
 }
+
+@defineProjectHistoryLine(project, ProjectEquipmentLine, item);
+@defineProjectHistoryLineProperty(project, ProjectEquipmentLine, initialDemand, 'Оборудование - Планируемое кол-во', nameItem);
+@defineProjectHistoryLineProperty(project, ProjectEquipmentLine, done, 'Оборудование - Кол-во (выполненное)', nameItem);

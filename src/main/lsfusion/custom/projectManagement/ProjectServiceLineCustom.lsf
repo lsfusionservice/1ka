@@ -7,7 +7,7 @@ NAMESPACE ProjectManagement;
 CLASS ProjectServiceLine 'Строка услуг проекта';
 
 project = DATA Project (ProjectServiceLine) NONULL DELETE;
-indexService '№' = PARTITION SUM 1 ORDER ProjectServiceLine l BY project(l) IN id MATERIALIZED CHARWIDTH 3;
+index '№' = PARTITION SUM 1 ORDER ProjectServiceLine l BY project(l) IN id MATERIALIZED CHARWIDTH 3;
 
 service = DATA Service (ProjectServiceLine) NONULL;
 nameService 'Service' (ProjectServiceLine l) = name(service(l));
@@ -20,7 +20,7 @@ initialDemand 'Initial demand' = DATA NUMERIC[16,3] (ProjectServiceLine);
 
 EXTEND FORM project
     OBJECTS sl = ProjectServiceLine
-    PROPERTIES(sl) indexService, nameService, nameUom, initialDemand
+    PROPERTIES(sl) index, nameService, nameUom, initialDemand
     PROPERTIES(sl) NEW, DELETE
     FILTERS project(sl) = p
 ;
@@ -33,3 +33,6 @@ DESIGN project{
     }
 }
 
+@defineProjectHistoryLine(project, ProjectServiceLine, service);
+@defineProjectHistoryLineProperty(project, ProjectServiceLine, uom, 'Работа - Ед. изм.', nameService);
+@defineProjectHistoryLineProperty(project, ProjectServiceLine, initialDemand, 'Работа - Планируемое кол-во', nameService);
