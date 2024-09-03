@@ -61,8 +61,18 @@ description 'Description' = DATA TEXT (ProjectHistory);
 
 changeDate 'Дата изменения' (Project p) = GROUP LAST dateTime(ProjectHistory ph) IF project(ph) = p ORDER dateTime(ph), ph;
 
-projectLegalEntityRole 'Роль' = DATA ProjectLegalEntityRole (Project, LegalEntity);
-nameRole 'Роль' (Project p, LegalEntity le) = name(projectLegalEntityRole(p, le));
+CLASS ProjectLegalEntity 'Кортагент проекта';
+
+project 'Проект' = DATA Project(ProjectLegalEntity) NONULL DELETE;
+index '№' = PARTITION SUM 1 ORDER ProjectLegalEntity le BY project(le) IN id MATERIALIZED CHARWIDTH 3;
+
+legalEntity 'Кортагент проекта' = DATA LegalEntity (ProjectLegalEntity) NONULL;
+nameLegalEntity 'Кортагент проекта' (ProjectLegalEntity le) = name(legalEntity(le));
+
+projectLegalEntityRole 'Роль в бригаде' = DATA ProjectLegalEntityRole (ProjectLegalEntity);
+nameProjectLegalEntityRole 'Роль в бригаде' (ProjectLegalEntity le) = name(projectLegalEntityRole(le));
+
+countProjectLegalEntities (Project p) = GROUP SUM 1 IF project(ProjectLegalEntity le) = p;
 
 EXTEND FORM projects
     PROPERTIES (p) READONLY changeDate, contractDate,
@@ -81,9 +91,10 @@ EXTEND FORM project
         },
         warrantyObligations, warrantyStartDate SHOWIF warrantyObligations(p), warrantyFinishDate SHOWIF warrantyObligations(p)    
     
-    OBJECTS le = LegalEntity
-    PROPERTIES (le) READONLY name
-    PROPERTIES (p, le) nameRole
+    OBJECTS le = ProjectLegalEntity
+    PROPERTIES (le) nameLegalEntity, nameProjectLegalEntityRole,
+        NEW, DELETE
+    FILTERS project(le) == p
 ;
 DESIGN project{
     header{
@@ -113,7 +124,7 @@ DESIGN project{
 
     details {
         NEW projectLegalEntityRole {
-            caption = 'Субподряд';
+            caption = badged('Контрагенты', countProjectLegalEntities(p));
             fill = 1;
             
             MOVE BOX(le) {
