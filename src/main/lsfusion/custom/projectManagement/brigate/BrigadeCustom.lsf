@@ -1,0 +1,69 @@
+MODULE BrigadeCustom;
+
+REQUIRE Project, EmployeeRoleCustom;
+
+NAMESPACE ProjectManagement;
+
+CLASS Brigade 'Бригада';
+CLASS BrigadeEmployee 'Сотрудник бригады';
+
+name '{Name}' = DATA ISTRING[100] (Brigade) CHARWIDTH 15;
+
+project 'Проект' = DATA Project (Brigade);
+numberProject 'Проект' (Brigade b) = number(project(b));
+
+manager 'Руководитель' = DATA Employee (Brigade) NONULL;
+nameManager 'Руководитель' (Brigade b) = name[Partner](manager(b));
+
+brigade 'Бригада' = DATA Brigade(BrigadeEmployee) NONULL DELETE;
+index '№' = PARTITION SUM 1 ORDER BrigadeEmployee be BY brigade(be) IN id MATERIALIZED CHARWIDTH 3;
+
+employee 'Сутрудник' = DATA Employee(BrigadeEmployee) NONULL;
+nameEmployee 'Сутрудник' (BrigadeEmployee be) = name[Partner](employee(be));
+
+brigadeEmployeeRole 'Роль в бригаде' = DATA EmployeeRole (BrigadeEmployee);
+nameBrigadeEmployeeRole 'Роль в бригаде' (BrigadeEmployee be) = name(brigadeEmployeeRole(be));
+
+FORM brigade 'Бригада'
+    OBJECTS b = Brigade PANEL
+    PROPERTIES (b) name, numberProject, nameManager    
+
+    OBJECTS be = BrigadeEmployee
+    PROPERTIES (be) index, nameEmployee, nameBrigadeEmployeeRole,
+        NEW, DELETE
+    FILTERS brigade(be) = b
+    
+    EDIT Brigade OBJECT b
+;
+
+EXTEND FORM project
+    OBJECTS b = Brigade
+    PROPERTIES (b) name, nameManager
+    PROPERTIES (b) NEW, DELETE
+    FILTERS project(b) == p
+
+    OBJECTS be = BrigadeEmployee
+    PROPERTIES (be) index, nameEmployee, nameBrigadeEmployeeRole,
+        NEW, DELETE
+    FILTERS brigade(be) = b
+;
+DESIGN project{
+    details {
+        NEW brigade {
+            caption = 'Бригады';
+            fill = 1;
+            horizontal = TRUE;
+
+            MOVE BOX(b) {
+                fill = 2;
+                caption = '';
+                
+            }
+            MOVE BOX(be) {
+                fill = 2;
+                caption = 'Сотрудники';
+            }            
+        }
+    }
+}
+

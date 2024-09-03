@@ -1,0 +1,36 @@
+MODULE EmployeeRoleCustom;
+
+REQUIRE MasterData;
+
+NAMESPACE ProjectManagement;
+
+CLASS EmployeeRole 'Роль';
+
+id '{ID}' = DATA STRING[100] (EmployeeRole) CHARWIDTH 15;
+name '{Name}' = DATA ISTRING[100] (EmployeeRole) CHARWIDTH 15;
+
+FORM employeeRole 'Роль'
+    OBJECTS r = EmployeeRole PANEL
+    PROPERTIES(r) id, name
+
+    EDIT EmployeeRole OBJECT r
+;
+
+FORM employeeRoles 'Роли'
+    OBJECTS r = EmployeeRole
+    PROPERTIES(r) READONLY id, name
+    PROPERTIES(r) NEWSESSION NEW, EDIT, DELETE
+
+    LIST EmployeeRole OBJECT r
+;
+
+FORM dialogEmployeeRoles 'Роль'
+    OBJECTS r = EmployeeRole
+    PROPERTIES(r) READONLY id, name
+;
+
+NAVIGATOR {
+    masterData {
+        NEW employeeRoles;
+    }
+}
