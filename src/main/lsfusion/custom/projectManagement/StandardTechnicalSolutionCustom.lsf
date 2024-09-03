@@ -1,0 +1,133 @@
+MODULE StandardTechnicalSolutionCustom;
+
+REQUIRE Project, ServiceP, ProjectServiceLineCustom;
+
+NAMESPACE ProjectManagement;
+
+// типовое техническое решение
+CLASS StandardTechnicalSolution 'ТТР';
+
+id '{ID}' = DATA STRING[100] (StandardTechnicalSolution) CHARWIDTH 15;
+name '{Name}' = DATA ISTRING[100] (StandardTechnicalSolution) CHARWIDTH 15;
+
+CLASS StandardTechnicalSolutionServiceLine 'Строка услуг ТТР';
+
+standardTechnicalSolution = DATA StandardTechnicalSolution (StandardTechnicalSolutionServiceLine) NONULL DELETE;
+indexService '№' = PARTITION SUM 1 ORDER StandardTechnicalSolutionServiceLine l BY standardTechnicalSolution(l) IN id MATERIALIZED CHARWIDTH 3;
+
+service = DATA Service (StandardTechnicalSolutionServiceLine) NONULL;
+nameService 'Service' (StandardTechnicalSolutionServiceLine l) = name(service(l));
+
+dataUom = DATA Uom (StandardTechnicalSolutionServiceLine);
+uom (StandardTechnicalSolutionServiceLine l) = OVERRIDE dataUom(l), uom(service(l));
+nameUom 'UoM' (StandardTechnicalSolutionServiceLine l) = name(uom(l));
+
+quantity 'Количество' = DATA NUMERIC[16,3] (StandardTechnicalSolutionServiceLine);
+
+FORM standardTechnicalSolution 'ТТР'
+    OBJECTS s = StandardTechnicalSolution PANEL    
+    PROPERTIES(s) id, name
+    
+    OBJECTS sl = StandardTechnicalSolutionServiceLine
+    PROPERTIES(sl) indexService, nameService, nameUom, quantity
+    PROPERTIES(sl) NEW, DELETE
+    FILTERS standardTechnicalSolution(sl) = s
+    
+    EDIT StandardTechnicalSolution OBJECT s
+;
+
+DESIGN standardTechnicalSolution{
+    OBJECTS {        
+        NEW header {
+            alignment = STRETCH;
+            MOVE PROPERTY(id(s));
+            MOVE PROPERTY(name(s));
+        }
+        NEW details {
+            tabbed = TRUE;
+            fill = 1;
+            MOVE BOX(sl) {
+                caption = 'Работы';
+            }
+        }
+    }
+}
+
+FORM standardTechnicalSolutions 'ТТР'
+    OBJECTS s = StandardTechnicalSolution
+    PROPERTIES(s) READONLY id, name
+    PROPERTIES(s) NEWSESSION NEW, EDIT, DELETE
+    
+    OBJECTS sl = StandardTechnicalSolutionServiceLine
+    PROPERTIES(sl)READONLY indexService, nameService, nameUom, quantity
+    FILTERS standardTechnicalSolution(sl) = s
+    
+    LIST StandardTechnicalSolution OBJECT s
+;
+
+DESIGN standardTechnicalSolutions{
+    OBJECTS {
+         MOVE BOX(s);
+        
+         NEW details {
+            tabbed = TRUE;
+            fill = 1;
+            MOVE BOX(sl) {
+                caption = 'Работы';
+            }
+        }
+    }
+}
+
+EXTEND FORM options
+    OBJECTS s = StandardTechnicalSolution
+    PROPERTIES(s) READONLY id, name
+    PROPERTIES(s) NEWSESSION NEW, EDIT, DELETE
+
+    OBJECTS sl = StandardTechnicalSolutionServiceLine
+    PROPERTIES (sl) READONLY indexService, nameService, nameUom, quantity
+    FILTERS standardTechnicalSolution(sl) = s
+;
+
+DESIGN options {
+    tabbedPane {
+        NEW standardTechnicalSolutions {
+            caption = 'ТТР';
+            MOVE BOX(s);
+            MOVE BOX(sl) {
+                caption = 'Работы';
+            }
+        }
+    }
+}
+
+standardTechnicalSolution 'ТТР'= DATA StandardTechnicalSolution (Project);
+nameStandardTechnicalSolution 'ТТР' (Project p) = name(standardTechnicalSolution(p)); 
+
+copy (StandardTechnicalSolution s, Project p) {
+    FOR standardTechnicalSolution(StandardTechnicalSolutionServiceLine l) = s AND p IS Project DO NEW sl = ProjectServiceLine {
+        project(sl) <- p;
+        service(sl) <- service(l);
+        dataUom(sl) <- dataUom(l);
+        initialDemand(sl) <- quantity(l);
+    }
+}
+
+EXTEND FORM project
+    PROPERTIES(p) nameStandardTechnicalSolution ON CHANGE {
+        DIALOG standardTechnicalSolutions OBJECTS s = standardTechnicalSolution(p) CHANGE LIST name(s) DO {
+            standardTechnicalSolution(p) <- s;
+            copy(s, p);
+        }
+    }
+;
+
+DESIGN project {
+    OBJECTS {       
+         headerLeft {
+            MOVE PROPERTY(nameStandardTechnicalSolution(p));
+        }
+    }
+}
+
+

@@ -1,6 +1,6 @@
 MODULE BrigadeCustom;
 
-REQUIRE Project, EmployeeRoleCustom;
+REQUIRE Project, BrigadeEmployeeRoleCustom;
 
 NAMESPACE ProjectManagement;
 
@@ -9,7 +9,7 @@ CLASS BrigadeEmployee 'Сотрудник бригады';
 
 name '{Name}' = DATA ISTRING[100] (Brigade) CHARWIDTH 15;
 
-project 'Проект' = DATA Project (Brigade);
+project 'Проект' = DATA Project (Brigade) NONULL;
 numberProject 'Проект' (Brigade b) = number(project(b));
 
 manager 'Руководитель' = DATA Employee (Brigade) NONULL;
@@ -21,7 +21,7 @@ index '№' = PARTITION SUM 1 ORDER BrigadeEmployee be BY brigade(be) IN id MATE
 employee 'Сутрудник' = DATA Employee(BrigadeEmployee) NONULL;
 nameEmployee 'Сутрудник' (BrigadeEmployee be) = name[Partner](employee(be));
 
-brigadeEmployeeRole 'Роль в бригаде' = DATA EmployeeRole (BrigadeEmployee);
+brigadeEmployeeRole 'Роль в бригаде' = DATA BrigadeEmployeeRole (BrigadeEmployee);
 nameBrigadeEmployeeRole 'Роль в бригаде' (BrigadeEmployee be) = name(brigadeEmployeeRole(be));
 
 FORM brigade 'Бригада'
