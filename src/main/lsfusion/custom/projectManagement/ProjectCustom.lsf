@@ -18,6 +18,9 @@ warrantyObligations 'Гарантийные обязательства' = DATA B
 warrantyStartDate 'Срок начала действия гарантии'	 = DATA DATE (Project); //при установке признака Гарантийные обязательства
 warrantyFinishDate 'Срок окончания действия гарантии' = DATA DATE (Project); //при установке признака Гарантийные обязательства
 
+CONSTRAINT SETCHANGED(number(Project p)) AND (GROUP SUM 1 IF number(p) == number(Project pp) AND NOT p == pp)
+    MESSAGE 'Совпадение номера проекта';
+
 // история
 CLASS ProjectHistory 'Change history';
 
@@ -81,6 +84,10 @@ EXTEND FORM projects
         warrantyObligations, warrantyStartDate, warrantyFinishDate
 ;
 
+DESIGN projects{
+    PROPERTY(namePartner(p)) {caption = 'Заказчик';};
+}
+
 EXTEND FORM project
     PROPERTIES (p) changeDate READONLY,
         contractStartDate, contractFinishDate, planStartDate, planFinishDate, factStartDate, factFinishDate,
@@ -98,26 +105,35 @@ EXTEND FORM project
 ;
 DESIGN project{
     header{
+        PROPERTY(namePartner(p)) {caption = 'Заказчик';};
         headerRight{
             REMOVE PROPERTY (startDate(p));
             MOVE PROPERTY (nameProjectAdmin(p));
             MOVE PROPERTY (archived(p)) {caption = 'Архивный'; }
-        }
-        NEW dates{
-            MOVE PROPERTY (changeDate(p));
-            MOVE PROPERTY (endDate(p)) {caption = 'Дата архивирования'; }
-            MOVE PROPERTY (contractDate(p));
-            MOVE PROPERTY (contractStartDate(p));
-            MOVE PROPERTY (contractFinishDate(p));
-            MOVE PROPERTY (planStartDate(p));
-            MOVE PROPERTY (planFinishDate(p));
-            MOVE PROPERTY (factStartDate(p));
-            MOVE PROPERTY (factFinishDate(p));            
-        }
-        NEW warrantyObligations {
-            MOVE PROPERTY (warrantyObligations(p));
-            MOVE PROPERTY (warrantyStartDate(p));
-            MOVE PROPERTY (warrantyFinishDate(p));
+        }        
+        
+        details {
+            NEW additionalInfo {
+                alignment = STRETCH;
+                caption = 'Дополнительно';
+                horizontal = TRUE;
+                NEW dates{
+                    MOVE PROPERTY (changeDate(p));
+                    MOVE PROPERTY (endDate(p)) {caption = 'Дата архивирования'; }
+                    MOVE PROPERTY (contractDate(p));
+                    MOVE PROPERTY (contractStartDate(p));
+                    MOVE PROPERTY (contractFinishDate(p));
+                    MOVE PROPERTY (planStartDate(p));
+                    MOVE PROPERTY (planFinishDate(p));
+                    MOVE PROPERTY (factStartDate(p));
+                    MOVE PROPERTY (factFinishDate(p));
+                }
+                NEW warrantyObligations {
+                    MOVE PROPERTY (warrantyObligations(p));
+                    MOVE PROPERTY (warrantyStartDate(p));
+                    MOVE PROPERTY (warrantyFinishDate(p));
+                }
+            } 
         }
         
     }
