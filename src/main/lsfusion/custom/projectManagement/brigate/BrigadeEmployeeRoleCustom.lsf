@@ -1,0 +1,42 @@
+MODULE BrigadeEmployeeRoleCustom;
+
+REQUIRE ProjectManagementSettings;
+
+NAMESPACE ProjectManagement;
+
+CLASS BrigadeEmployeeRole 'Роль сотрудника в бригаде';
+
+id '{ID}' = DATA STRING[100] (BrigadeEmployeeRole) CHARWIDTH 15;
+name '{Name}' = DATA ISTRING[100] (BrigadeEmployeeRole) CHARWIDTH 15;
+
+FORM employeeRole 'Роль сотрудника в бригаде'
+    OBJECTS r = BrigadeEmployeeRole PANEL
+    PROPERTIES(r) id, name
+
+    EDIT BrigadeEmployeeRole OBJECT r
+;
+
+FORM employeeRoles 'Роли сотрудника в бригаде'
+    OBJECTS r = BrigadeEmployeeRole
+    PROPERTIES(r) READONLY id, name
+    PROPERTIES(r) NEWSESSION NEW, EDIT, DELETE
+
+    LIST BrigadeEmployeeRole OBJECT r
+;
+
+FORM dialogEmployeeRoles 'Роль сотрудника в бригаде'
+    OBJECTS r = BrigadeEmployeeRole
+    PROPERTIES(r) READONLY id, name
+;
+
+EXTEND FORM options
+    OBJECTS ber = BrigadeEmployeeRole
+    PROPERTIES(ber) READONLY id, name
+    PROPERTIES(ber) NEWSESSION NEW, EDIT, DELETE
+;
+
+DESIGN options {
+    tabbedPane {
+        MOVE BOX(ber);
+    }
+}

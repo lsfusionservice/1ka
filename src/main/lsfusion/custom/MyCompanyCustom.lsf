@@ -7,4 +7,4 @@ REQUIRE Eval, ProcessMonitor, Backup,
         ServiceP,
         ProjectServiceLineCustom, ProjectMaterialLineCustom, ProjectEquipmentLineCustom,
         InventorySettings, CategoryLot,
-        EmployeeRoleCustom, BrigadeCustom;
+        BrigadeEmployeeRoleCustom, BrigadeCustom, StandardTechnicalSolutionCustom;
