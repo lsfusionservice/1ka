@@ -150,3 +150,57 @@ DESIGN project{
         }
     }
 }
+
+META defineProjectHistoryLine(doc, docLine, class)
+
+    WHEN SETCHANGED(docLine l IS docLine) AND doc(l) = ###doc d
+        AND NOT disableHistory() DO {
+        NEW h = ###doc##History {
+            doc(h) <- d;
+            dateTime(h) <- currentDateTime();
+            user(h) <- currentUser();
+            computer(h) <- currentComputer();
+            type(h) <- 'Added line';
+            description (h) <- '' + index(l);
+        }
+    }
+
+    WHEN DROPPED(docLine l IS docLine) AND PREV(doc(l)) = ###doc d
+        AND NOT disableHistory() DO {
+        NEW h = ###doc##History {
+            doc(h) <- d;
+            dateTime(h) <- currentDateTime();
+            user(h) <- currentUser();
+            computer(h) <- currentComputer();
+            type(h) <- 'Removed line';
+            description (h) <- '' + PREV(index(l));
+        }
+    }
+
+    WHEN CHANGED(class(docLine l)) AND doc(l) = ###doc d
+        AND NOT disableHistory() DO {
+        NEW h = ###doc##History {
+            doc(h) <- d;
+            dateTime(h) <- currentDateTime();
+            user(h) <- currentUser();
+            computer(h) <- currentComputer();
+            type(h) <- 'Product changed';
+            description (h) <- '' + index(l) + (CONCAT ' -> ', PREV(name###class(l)), name###class(l));
+        }
+    }
+
+END
+
+META defineProjectHistoryLineProperty(doc, docLine, prop, capt, descrProp)
+    WHEN CHANGED(prop(docLine l)) AND doc(l) = ###doc d
+        AND NOT disableHistory() DO {
+        NEW h = ###doc##History {
+            doc(h) <- d;
+            dateTime(h) <- currentDateTime();
+            user(h) <- currentUser();
+            computer(h) <- currentComputer();
+            type(h) <- capt;
+            description (h) <- '' + index(l) + '. ' + (CONCAT ', ', descrProp(l), (CONCAT ' -> ', PREV(prop(l)), prop(l)));
+        }
+    }
+END

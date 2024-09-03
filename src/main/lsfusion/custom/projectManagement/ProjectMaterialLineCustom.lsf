@@ -37,3 +37,8 @@ DESIGN project{
         }
     }
 }
+
+@defineProjectHistoryLine(project, ProjectMaterialLine, item);
+@defineProjectHistoryLineProperty(project, ProjectMaterialLine, uom, 'Материал - Ед. изм.', nameItem);
+@defineProjectHistoryLineProperty(project, ProjectMaterialLine, initialDemand, 'Материал - Планируемое кол-во', nameItem);
+@defineProjectHistoryLineProperty(project, ProjectMaterialLine, done, 'Материал - Кол-во (выполненное)', nameItem);
