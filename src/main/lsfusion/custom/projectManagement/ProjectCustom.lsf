@@ -72,8 +72,8 @@ index '№' = PARTITION SUM 1 ORDER ProjectLegalEntity le BY project(le) IN id M
 legalEntity 'Кортагент проекта' = DATA LegalEntity (ProjectLegalEntity) NONULL;
 nameLegalEntity 'Кортагент проекта' (ProjectLegalEntity le) = name(legalEntity(le));
 
-projectLegalEntityRole 'Роль в бригаде' = DATA ProjectLegalEntityRole (ProjectLegalEntity);
-nameProjectLegalEntityRole 'Роль в бригаде' (ProjectLegalEntity le) = name(projectLegalEntityRole(le));
+projectLegalEntityRole 'Роль' = DATA ProjectLegalEntityRole (ProjectLegalEntity);
+nameProjectLegalEntityRole 'Роль' (ProjectLegalEntity le) = name(projectLegalEntityRole(le));
 
 countProjectLegalEntities (Project p) = GROUP SUM 1 IF project(ProjectLegalEntity le) = p;
 
