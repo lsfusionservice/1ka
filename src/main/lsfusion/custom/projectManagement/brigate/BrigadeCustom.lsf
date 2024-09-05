@@ -18,11 +18,11 @@ nameManager 'Руководитель' (Brigade b) = name[Partner](manager(b));
 brigade 'Бригада' = DATA Brigade(BrigadeEmployee) NONULL DELETE;
 index '№' = PARTITION SUM 1 ORDER BrigadeEmployee be BY brigade(be) IN id MATERIALIZED CHARWIDTH 3;
 
-employee 'Сутрудник' = DATA Employee(BrigadeEmployee) NONULL;
-nameEmployee 'Сутрудник' (BrigadeEmployee be) = name[Partner](employee(be));
+employee 'Сотрудник' = DATA Employee(BrigadeEmployee) NONULL;
+nameEmployee 'Сотрудник' (BrigadeEmployee be) = name[Partner](employee(be));
 
-brigadeEmployeeRole 'Роль в бригаде' = DATA BrigadeEmployeeRole (BrigadeEmployee);
-nameBrigadeEmployeeRole 'Роль в бригаде' (BrigadeEmployee be) = name(brigadeEmployeeRole(be));
+brigadeEmployeeRole 'Роль' = DATA BrigadeEmployeeRole (BrigadeEmployee);
+nameBrigadeEmployeeRole 'Роль' (BrigadeEmployee be) = name(brigadeEmployeeRole(be));
 
 FORM brigade 'Бригада'
     OBJECTS b = Brigade PANEL
@@ -44,7 +44,7 @@ EXTEND FORM project
 
     OBJECTS be = BrigadeEmployee
     PROPERTIES (be) index, nameEmployee, nameBrigadeEmployeeRole,
-        NEW, DELETE
+        NEW SHOWIF b, DELETE SHOWIF b
     FILTERS brigade(be) = b
 ;
 DESIGN project{

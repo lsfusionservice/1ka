@@ -1,6 +1,6 @@
 MODULE ItemCustom;
 
-REQUIRE CategoryCustom, Item;
+REQUIRE CategoryCustom, ItemAttribute;
 
 NAMESPACE MasterData;
 
@@ -13,6 +13,18 @@ CONSTRAINT SETCHANGED(itemType(Item i)) AND NOT itemType(category(i)) == itemTyp
 
 CONSTRAINT SETCHANGED(itemType(Category c)) AND (GROUP MIN TRUE IF NOT itemType(Item i) == itemType(c) AND level(category(i), c) AND itemType(i)) 
     MESSAGE 'Категория содержит номенклатуру с отличным типом';
+
+customChangeValue () += TRUE;
+customChangeValue (Item i, ItemAttribute a) +{
+    INPUT s = STRING DO{
+        IF value(a, s) THEN attribute(i, a) <- value(a, s);
+        ELSE NEW v = ItemAttributeValue {
+            value(v) <- s;
+            itemAttribute(v) <- a;
+            attribute(i, a) <- v;
+        }
+    } 
+}
 
 EXTEND FORM item
     PROPERTIES (i) nameItemType
