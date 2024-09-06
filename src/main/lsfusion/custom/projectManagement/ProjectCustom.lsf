@@ -64,13 +64,13 @@ description 'Description' = DATA TEXT (ProjectHistory);
 
 changeDate 'Дата изменения' (Project p) = GROUP LAST dateTime(ProjectHistory ph) IF project(ph) = p ORDER dateTime(ph), ph;
 
-CLASS ProjectLegalEntity 'Кортагент проекта';
+CLASS ProjectLegalEntity 'Контрагент проекта';
 
 project 'Проект' = DATA Project(ProjectLegalEntity) NONULL DELETE;
 index '№' = PARTITION SUM 1 ORDER ProjectLegalEntity le BY project(le) IN id MATERIALIZED CHARWIDTH 3;
 
-legalEntity 'Кортагент проекта' = DATA LegalEntity (ProjectLegalEntity) NONULL;
-nameLegalEntity 'Кортагент проекта' (ProjectLegalEntity le) = name(legalEntity(le));
+legalEntity 'Контрагент проекта' = DATA LegalEntity (ProjectLegalEntity) NONULL;
+nameLegalEntity 'Контрагент проекта' (ProjectLegalEntity le) = name(legalEntity(le));
 
 projectLegalEntityRole 'Роль' = DATA ProjectLegalEntityRole (ProjectLegalEntity);
 nameProjectLegalEntityRole 'Роль' (ProjectLegalEntity le) = name(projectLegalEntityRole(le));
@@ -151,7 +151,7 @@ DESIGN project{
     }
 }
 
-META defineProjectHistoryLine(doc, docLine, class)
+META defineProjectHistoryLine(doc, docLine, class, changeCapt)
 
     WHEN SETCHANGED(docLine l IS docLine) AND doc(l) = ###doc d
         AND NOT disableHistory() DO {
@@ -184,8 +184,8 @@ META defineProjectHistoryLine(doc, docLine, class)
             dateTime(h) <- currentDateTime();
             user(h) <- currentUser();
             computer(h) <- currentComputer();
-            type(h) <- 'Product changed';
-            description (h) <- '' + index(l) + (CONCAT ' -> ', PREV(name###class(l)), name###class(l));
+            type(h) <- changeCapt;
+            description (h) <- '' + index(l) + '. ' + (CONCAT ' -> ', PREV(name###class(l)), name###class(l));
         }
     }
 
@@ -204,3 +204,17 @@ META defineProjectHistoryLineProperty(doc, docLine, prop, capt, descrProp)
         }
     }
 END
+
+@defineProjectHistoryLine(project, ProjectLegalEntity, legalEntity, 'Изменен контрагент');
+
+@defineProjectHistoryLineProperty(project, ProjectLegalEntity, nameProjectLegalEntityRole, 'Изменена роль контрагента', nameLegalEntity);
+
+nameFile(ProjectFile pf) = nameExtension(pf);
+
+@defineProjectHistoryLine(project, ProjectFile, file, 'Изменен файл проекта');
+
+@defineProjectHistoryLineProperty(project, ProjectFile, dateTime, 'Изменена дата документа', description);
+
+@defineProjectHistoryLineProperty(project, ProjectFile, name, 'Изменено наименование документа', description);
+@defineProjectHistoryLineProperty(project, ProjectFile, extension, 'Изменено расширение документа', description);
+@defineProjectHistoryLineProperty(project, ProjectFile, user, 'Изменено пользователь документа', description);
