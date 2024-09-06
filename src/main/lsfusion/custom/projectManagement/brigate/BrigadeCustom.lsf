@@ -1,6 +1,6 @@
 MODULE BrigadeCustom;
 
-REQUIRE Project, BrigadeEmployeeRoleCustom;
+REQUIRE ProjectCustom, BrigadeEmployeeRoleCustom;
 
 NAMESPACE ProjectManagement;
 
@@ -11,6 +11,7 @@ name '{Name}' = DATA ISTRING[100] (Brigade) CHARWIDTH 15;
 
 project 'Проект' = DATA Project (Brigade) NONULL;
 numberProject 'Проект' (Brigade b) = number(project(b));
+index '№' = PARTITION SUM 1 ORDER Brigade b BY project(b) IN id MATERIALIZED CHARWIDTH 3;
 
 manager 'Руководитель' = DATA Employee (Brigade) NONULL;
 nameManager 'Руководитель' (Brigade b) = name[Partner](manager(b));
@@ -23,6 +24,8 @@ nameEmployee 'Сотрудник' (BrigadeEmployee be) = name[Partner](employee(
 
 brigadeEmployeeRole 'Роль' = DATA BrigadeEmployeeRole (BrigadeEmployee);
 nameBrigadeEmployeeRole 'Роль' (BrigadeEmployee be) = name(brigadeEmployeeRole(be));
+
+project (BrigadeEmployee be) = project(brigade(be));
 
 FORM brigade 'Бригада'
     OBJECTS b = Brigade PANEL
@@ -67,3 +70,14 @@ DESIGN project{
     }
 }
 
+@defineProjectHistoryLine(project, Brigade, manager, 'Изменен руководитель бригады');
+
+description = ABSTRACT STRING (Brigade);
+
+@defineProjectHistoryLineProperty(project, Brigade, name, 'Изменено наименование бригады', description);
+
+@defineProjectHistoryLine(project, BrigadeEmployee, employee, 'Изменен cотрудник бригады');
+
+description = ABSTRACT STRING (BrigadeEmployee);
+
+@defineProjectHistoryLineProperty(project, BrigadeEmployee, nameBrigadeEmployeeRole, 'Изменена роль сотрудника', description);
