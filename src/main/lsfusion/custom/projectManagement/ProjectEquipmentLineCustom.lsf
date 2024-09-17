@@ -1,6 +1,6 @@
 MODULE ProjectEquipmentLineCustom;
 
-REQUIRE ProjectCustom, ItemCustom, ProductLot;
+REQUIRE ProjectCustom, ItemCustom, ProductLot, StandardTechnicalSolutionCustom;
 NAMESPACE ProjectManagement;
 
 CLASS ProjectEquipmentLine 'Строка оборудования проекта';
@@ -42,7 +42,16 @@ doneLot 'Lot quantity (done)' (ProjectEquipmentLine rl) = GROUP SUM done(rl, Lot
 doneLotLeft (ProjectEquipmentLine rl) = done(rl) - OVERRIDE doneLot(rl), 0;
 
 doneLot 'Lot initial demand' (Project p) = GROUP SUM done(ProjectEquipmentLine l, Lot lot) IF project(l) = p;
-    
+
+standardTechnicalSolution 'ТТР' = DATA StandardTechnicalSolution (ProjectEquipmentLine, Lot);
+nameStandardTechnicalSolution 'ТТР' (ProjectEquipmentLine l, Lot lot) = name(standardTechnicalSolution(l, lot));
+
+in (Project p, StandardTechnicalSolution s) = GROUP MIN TRUE IF ProjectStandardTechnicalSolutionLine sl AND project(sl) == p AND s == standardTechnicalSolution(sl);
+
+CONSTRAINT SETCHANGED(standardTechnicalSolution(ProjectEquipmentLine l, Lot lot)) AND NOT in(project(l), standardTechnicalSolution(l, lot))
+    CHECKED BY standardTechnicalSolution[ProjectEquipmentLine, Lot]
+    MESSAGE 'ТТР не соответствует проекту';
+
 WHEN LOCAL CHANGED(doneLot(ProjectEquipmentLine el)) AND NOT equipmentDone(project(el)) DO {
     done(el) <- doneLot(el);
 }
@@ -66,7 +75,7 @@ EXTEND FORM project
 
     OBJECTS lotL = Lot
     PROPERTIES (lotL) id READONLY
-    PROPERTIES (el, lotL) done READONLYIF NOT useLot(product(lotL))
+    PROPERTIES (el, lotL) done READONLYIF NOT useLot(product(lotL)), nameStandardTechnicalSolution
     PROPERTIES (lotL) EDIT
     FILTERS done(el, lotL)
 

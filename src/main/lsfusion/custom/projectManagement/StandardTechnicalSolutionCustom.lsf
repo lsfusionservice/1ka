@@ -101,8 +101,13 @@ DESIGN options {
     }
 }
 
-standardTechnicalSolution 'ТТР'= DATA StandardTechnicalSolution (Project);
-nameStandardTechnicalSolution 'ТТР' (Project p) = name(standardTechnicalSolution(p)); 
+CLASS ProjectStandardTechnicalSolutionLine 'Строка ТТР проекта';
+
+project = DATA Project (ProjectStandardTechnicalSolutionLine) NONULL DELETE;
+index '№' = PARTITION SUM 1 ORDER ProjectStandardTechnicalSolutionLine l BY project(l) IN id MATERIALIZED CHARWIDTH 3;
+
+standardTechnicalSolution = DATA StandardTechnicalSolution (ProjectStandardTechnicalSolutionLine) NONULL;
+nameStandardTechnicalSolution 'ТТР' (ProjectStandardTechnicalSolutionLine l) = name(standardTechnicalSolution(l));
 
 copy (StandardTechnicalSolution s, Project p) {
     FOR standardTechnicalSolution(StandardTechnicalSolutionServiceLine l) = s AND p IS Project DO NEW sl = ProjectServiceLine {
@@ -114,20 +119,23 @@ copy (StandardTechnicalSolution s, Project p) {
 }
 
 EXTEND FORM project
-    PROPERTIES(p) nameStandardTechnicalSolution ON CHANGE {
-        DIALOG standardTechnicalSolutions OBJECTS s = standardTechnicalSolution(p) CHANGE LIST name(s) DO {
-            standardTechnicalSolution(p) <- s;
-            copy(s, p);
-        }
-    }
+    OBJECTS stsl = ProjectStandardTechnicalSolutionLine
+    PROPERTIES (stsl) index,
+        nameStandardTechnicalSolution ON CHANGE {
+            DIALOG standardTechnicalSolutions OBJECTS s = standardTechnicalSolution(stsl) INPUT DO {
+                standardTechnicalSolution(stsl) <- s;
+                project(stsl) <- p;
+                copy(s, p);
+            }
+        }, NEW, DELETE
 ;
 
-DESIGN project {
-    OBJECTS {       
-         headerLeft {
-            MOVE PROPERTY(nameStandardTechnicalSolution(p));
+DESIGN project{
+    details {
+        NEW sts {
+            caption = 'ТТР';
+            horizontal = TRUE;
+            MOVE BOX(stsl) {caption = '';}            
         }
     }
 }
-
-
