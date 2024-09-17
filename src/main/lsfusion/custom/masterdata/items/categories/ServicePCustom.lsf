@@ -1,0 +1,32 @@
+MODULE ServicePCustom;
+
+REQUIRE ServiceP, Product, ItemCustom;
+
+NAMESPACE MasterData;
+
+CLASS ServiceProductLine 'Спецификация работ';
+
+service = DATA Service (ServiceProductLine) NONULL DELETE;
+indexProduct '№' = PARTITION SUM 1 ORDER ServiceProductLine l BY service(l) IN id MATERIALIZED CHARWIDTH 3;
+
+product = DATA Product (ServiceProductLine) NONULL;
+nameProduct 'Product' (ServiceProductLine l) = name(product(l));
+nameUom 'UoM' (ServiceProductLine l) = name(uom(product(l)));
+quantity 'Количество' = DATA NUMERIC[16,3] (ServiceProductLine);
+
+CONSTRAINT SETCHANGED(product(ServiceProductLine l)) AND NOT itemType(product(l)) == ItemType.material
+    CHECKED BY product[ServiceProductLine]
+    MESSAGE 'Номенклатура не может быть выбрана в спецификацию работ';
+
+EXTEND FORM item
+    OBJECTS pl = ServiceProductLine
+    PROPERTIES(pl) indexProduct, nameProduct, nameUom, quantity
+    PROPERTIES(pl) NEW, DELETE
+    FILTERS service(pl) = i AND i IS Service
+;
+
+DESIGN item {
+    tabs {
+        MOVE BOX(pl) { caption = 'Материалы'; showIf = i IS Service;}
+    }
+}

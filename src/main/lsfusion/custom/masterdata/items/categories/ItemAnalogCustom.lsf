@@ -31,6 +31,6 @@ EXTEND FORM item
 
 DESIGN item {
     tabs {
-        MOVE BOX(analog) { caption = 'Аналоги'; }
+        MOVE BOX(analog) { caption = 'Аналоги'; showIf = i IS Product;}
     }
 }
