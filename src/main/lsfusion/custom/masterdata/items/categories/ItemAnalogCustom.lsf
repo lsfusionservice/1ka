@@ -1,0 +1,36 @@
+MODULE ItemAnalogCustom;
+
+REQUIRE MasterData, ItemCustom;
+
+NAMESPACE MasterData;
+
+analog 'Аналог' = DATA BOOLEAN (Item, Item);
+
+CONSTRAINT SETCHANGED(analog(Item i, Item analog)) AND (NOT itemType(i) == itemType(analog) OR i == analog)
+    CHECKED BY analog[Item, Item]
+    MESSAGE 'Номенклатура не может быть аналогом для текущей';
+
+addAnalog 'Добавить'(Item item) {
+    DIALOG items OBJECTS i INPUT 
+        FILTERS NOT i == item AND itemType(i) == itemType(item) DO {
+        analog(item, i) <- TRUE;
+    }    
+} IMAGE 'add.png';
+
+deleteAnalog 'Удалить' (Item item, Item analog) {
+    analog(item, analog) <- NULL;
+} IMAGE 'delete.png';
+
+EXTEND FORM item
+    OBJECTS analog = Item
+    PROPERTIES(analog) READONLY name, id, nameCategory, nameUom, reference, class
+    PROPERTIES TOOLBAR DRAW analog addAnalog(i), deleteAnalog(i, analog)
+    ORDERS name(analog)
+    FILTERS analog(i, analog)
+;
+
+DESIGN item {
+    tabs {
+        MOVE BOX(analog) { caption = 'Аналоги'; }
+    }
+}
