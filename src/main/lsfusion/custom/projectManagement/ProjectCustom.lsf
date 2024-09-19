@@ -151,7 +151,7 @@ DESIGN project{
     }
 }
 
-META defineProjectHistoryLine(doc, docLine, class, changeCapt)
+META defineProjectHistoryLine(doc, docLine, class, changeCapt, descProperty)
 
     WHEN SETCHANGED(docLine l IS docLine) AND doc(l) = ###doc d
         AND NOT disableHistory() DO {
@@ -161,7 +161,7 @@ META defineProjectHistoryLine(doc, docLine, class, changeCapt)
             user(h) <- currentUser();
             computer(h) <- currentComputer();
             type(h) <- 'Added line';
-            description (h) <- '' + index(l);
+            description (h) <- CONCAT '', index(l), descProperty(l);
         }
     }
 
@@ -173,7 +173,7 @@ META defineProjectHistoryLine(doc, docLine, class, changeCapt)
             user(h) <- currentUser();
             computer(h) <- currentComputer();
             type(h) <- 'Removed line';
-            description (h) <- '' + PREV(index(l));
+            description (h) <- CONCAT ' ', PREV(index(l)), PREV(descProperty(l));
         }
     }
 
@@ -205,13 +205,13 @@ META defineProjectHistoryLineProperty(doc, docLine, prop, capt, descrProp)
     }
 END
 
-@defineProjectHistoryLine(project, ProjectLegalEntity, legalEntity, 'Изменен контрагент');
+@defineProjectHistoryLine(project, ProjectLegalEntity, legalEntity, 'Изменен контрагент', nameLegalEntity);
 
 @defineProjectHistoryLineProperty(project, ProjectLegalEntity, nameProjectLegalEntityRole, 'Изменена роль контрагента', nameLegalEntity);
 
 nameFile(ProjectFile pf) = nameExtension(pf);
 
-@defineProjectHistoryLine(project, ProjectFile, file, 'Изменен файл проекта');
+@defineProjectHistoryLine(project, ProjectFile, file, 'Изменен файл проекта', nameFile);
 
 @defineProjectHistoryLineProperty(project, ProjectFile, dateTime, 'Изменена дата документа', description);
 

@@ -38,7 +38,7 @@ DESIGN project{
     }
 }
 
-@defineProjectHistoryLine(project, ProjectMaterialLine, item, 'Изменен товар');
+@defineProjectHistoryLine(project, ProjectMaterialLine, item, 'Изменен материал', nameItem);
 @defineProjectHistoryLineProperty(project, ProjectMaterialLine, uom, 'Материал - изменена ед. изм.', nameItem);
 @defineProjectHistoryLineProperty(project, ProjectMaterialLine, initialDemand, 'Материал - Планируемое кол-во', nameItem);
 @defineProjectHistoryLineProperty(project, ProjectMaterialLine, done, 'Материал - Кол-во (выполненное)', nameItem);

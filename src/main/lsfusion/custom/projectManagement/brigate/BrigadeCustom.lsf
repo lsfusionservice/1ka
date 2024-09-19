@@ -70,13 +70,13 @@ DESIGN project{
     }
 }
 
-@defineProjectHistoryLine(project, Brigade, manager, 'Изменен руководитель бригады');
+@defineProjectHistoryLine(project, Brigade, manager, 'Изменен руководитель бригады', nameManager);
 
 description = ABSTRACT STRING (Brigade);
 
 @defineProjectHistoryLineProperty(project, Brigade, name, 'Изменено наименование бригады', description);
 
-@defineProjectHistoryLine(project, BrigadeEmployee, employee, 'Изменен cотрудник бригады');
+@defineProjectHistoryLine(project, BrigadeEmployee, employee, 'Изменен cотрудник бригады', nameEmployee);
 
 description = ABSTRACT STRING (BrigadeEmployee);
 
