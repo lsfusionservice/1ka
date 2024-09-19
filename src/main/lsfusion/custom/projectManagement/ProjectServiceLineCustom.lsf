@@ -33,6 +33,6 @@ DESIGN project{
     }
 }
 
-@defineProjectHistoryLine(project, ProjectServiceLine, service, 'Изменена работа');
+@defineProjectHistoryLine(project, ProjectServiceLine, service, 'Изменена работа', nameService);
 @defineProjectHistoryLineProperty(project, ProjectServiceLine, uom, 'Работа - изменена ед. изм.', nameService);
 @defineProjectHistoryLineProperty(project, ProjectServiceLine, initialDemand, 'Работа - Планируемое кол-во', nameService);

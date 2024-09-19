@@ -158,6 +158,6 @@ afterProcessProjectEquipmentLineLotBarCode(Project p, STRING s) + {
     ACTIVATE PROPERTY project.done(el, lotL);
 }
 
-@defineProjectHistoryLine(project, ProjectEquipmentLine, item, 'Изменено оборудование');
+@defineProjectHistoryLine(project, ProjectEquipmentLine, item, 'Изменено оборудование', nameItem);
 @defineProjectHistoryLineProperty(project, ProjectEquipmentLine, initialDemand, 'Оборудование - изменено планируемое кол-во', nameItem);
 @defineProjectHistoryLineProperty(project, ProjectEquipmentLine, done, 'Оборудование - изменено кол-во (выполненное)', nameItem);
