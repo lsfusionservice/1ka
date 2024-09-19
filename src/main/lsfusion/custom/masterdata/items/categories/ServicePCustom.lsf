@@ -10,7 +10,7 @@ service = DATA Service (ServiceProductLine) NONULL DELETE;
 indexProduct '№' = PARTITION SUM 1 ORDER ServiceProductLine l BY service(l) IN id MATERIALIZED CHARWIDTH 3;
 
 product = DATA Product (ServiceProductLine) NONULL;
-nameProduct 'Product' (ServiceProductLine l) = name(product(l));
+nameProduct 'Материал' (ServiceProductLine l) = name(product(l));
 nameUom 'UoM' (ServiceProductLine l) = name(uom(product(l)));
 quantity 'Количество' = DATA NUMERIC[16,3] (ServiceProductLine);
 
