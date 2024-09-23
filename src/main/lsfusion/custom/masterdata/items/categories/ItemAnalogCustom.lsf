@@ -4,7 +4,8 @@ REQUIRE MasterData, ItemCustom;
 
 NAMESPACE MasterData;
 
-analog 'Аналог' = DATA BOOLEAN (Item, Item);
+dataAnalog 'Аналог' (Item item, Item analog) = DATA BOOLEAN (Item, Item);
+analog 'Аналог' (Item item, Item analog) = OVERRIDE item == analog AND item IS Item AND analog IS Item, dataAnalog(item, analog);
 
 CONSTRAINT SETCHANGED(analog(Item i, Item analog)) AND (NOT itemType(i) == itemType(analog) OR i == analog)
     CHECKED BY analog[Item, Item]

@@ -39,3 +39,70 @@ DESIGN item {
         MOVE PROPERTY (nameItemType(i));
     }
 }
+
+META extendFormEditable (form, formCaption, type)
+FORM form ''##formCaption
+    TREE categories c = Category PARENT parent(c)
+    PROPERTIES READONLY name(c)
+    ORDERS name(c)
+    FILTERS itemType(c) == type OR NOT itemType(c)
+    FILTERGROUP activeCategory
+        FILTER '{Active}' active(c) DEFAULT
+
+    OBJECTS i = Item
+    PROPERTIES(i) READONLY name, id, nameCategory, nameUom, reference, class
+    ORDERS name(i)
+    FILTERS itemType(i) == type
+    FILTERGROUP category
+        FILTER 'By category' level(category(i), c) DEFAULT
+    FILTERGROUP active
+        FILTER '{Active}' active(i) 'F8' DEFAULT
+        FILTER 'Archived' archived(i) 'F7'
+
+    LIST Item OBJECT i
+;
+
+@extendFormEditable(form);
+
+DESIGN form {
+    OBJECTS {
+        NEW pane {
+            horizontal = TRUE;
+            fill = 1;
+            NEW options {
+                fill = 1;
+                width = 200;
+                NEW categories {
+                    fill = 1;
+                    MOVE BOX(TREE categories);
+                }
+                NEW tabs {
+                    fill = 1;
+                    tabbed = TRUE;
+                }
+            }
+            NEW details {
+                fill = 3;
+                width = 200;
+                NEW filters {
+                    caption = 'Filters';
+                    horizontal = TRUE;
+                    MOVE FILTERGROUP(category);
+                    MOVE FILTERGROUP(active);
+                }
+                MOVE BOX(i) {
+                    caption = '';
+                    GRID(i) { defaultComponent = TRUE; }
+                }
+            }
+
+        }
+    }
+}
+END
+
+@extendFormEditable(equipments, 'Оборудование', ItemType.equipment);
+
+@extendFormEditable(services, 'Услуги', ItemType.service);
+
+@extendFormEditable(materials, 'Материалы', ItemType.equipment);
