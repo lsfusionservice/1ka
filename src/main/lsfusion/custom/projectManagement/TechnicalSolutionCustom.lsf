@@ -1,0 +1,261 @@
+MODULE TechnicalSolutionCustom;
+
+REQUIRE Product, ServicePCustom, ProjectManagementSettings;
+
+NAMESPACE ProjectManagement;
+
+// типовое техническое решение
+CLASS TechnicalSolution 'ТТР';
+
+id '{ID}' = DATA STRING[100] (TechnicalSolution) CHARWIDTH 15;
+name '{Name}' = DATA ISTRING[100] (TechnicalSolution) CHARWIDTH 15;
+
+FORM technicalSolution 'ТТР'
+    OBJECTS s = TechnicalSolution PANEL
+    PROPERTIES(s) id, name
+;
+
+DESIGN technicalSolution{
+    OBJECTS {
+        NEW header {
+            alignment = STRETCH;
+            MOVE PROPERTY(id(s));
+            MOVE PROPERTY(name(s));
+        }
+        NEW details {
+            tabbed = TRUE;
+            fill = 1;
+        }
+    }
+}
+
+META defineDocTemplateType(class, object, quantityName, quantityCaption, captionName)
+// Оборудование
+CLASS ###class##EquipmentLine 'Строка оборудования '##captionName;
+
+class = DATA ###class (###class##EquipmentLine) NONULL DELETE;
+index '№' = PARTITION SUM 1 ORDER ###class##EquipmentLine l BY class(l) IN id MATERIALIZED CHARWIDTH 3;
+
+equipment = DATA Product (###class##EquipmentLine) NONULL;
+nameEquipment 'Оборудование' (###class##EquipmentLine l) = name(equipment(l));
+
+uom (###class##EquipmentLine l) =  uom(equipment(l));
+nameUom 'UoM' (###class##EquipmentLine l) = name(uom(l));
+
+quantityName ''##quantityCaption = DATA NUMERIC[16,3] (###class##EquipmentLine);
+
+// Услуги
+CLASS ###class##ServiceLine 'Строка услуг '##captionName;
+
+class = DATA ###class (###class##ServiceLine) NONULL DELETE;
+class##EquipmentLine = DATA ###class##EquipmentLine (###class##ServiceLine);
+
+technical(###class##ServiceLine sl) = equipment(class##EquipmentLine(sl));
+nameEquipment 'Оборудование' (###class##ServiceLine sl) = name(technical(sl));
+
+index '№' = PARTITION SUM 1 ORDER ###class##ServiceLine l BY class(l) IN id MATERIALIZED CHARWIDTH 3;
+indexEquipmentService '№' = PARTITION SUM 1 ORDER ###class##ServiceLine l BY class##EquipmentLine(l)  IN id MATERIALIZED CHARWIDTH 3;
+
+service = DATA Service (###class##ServiceLine) NONULL;
+nameService 'Service' (###class##ServiceLine l) = name(service(l));
+
+dataUom = DATA Uom (###class##ServiceLine);
+uom (###class##ServiceLine l) = OVERRIDE dataUom(l), uom(service(l));
+nameUom 'UoM' (###class##ServiceLine l) = name(uom(l));
+
+quantityName ''##quantityCaption = DATA NUMERIC[16,3] (###class##ServiceLine);
+
+// Материалы
+CLASS ###class##MaterialLine 'Строка материалов '##captionName;
+
+class##ServiceLine = DATA ###class##ServiceLine (###class##MaterialLine) NONULL DELETE;
+class(###class##MaterialLine l) = class(class##ServiceLine(l));
+
+index '№' = PARTITION SUM 1 ORDER ###class##MaterialLine l BY class##ServiceLine(l)  IN id MATERIALIZED CHARWIDTH 3;
+
+material = DATA Product (###class##MaterialLine) NONULL;
+nameMaterial 'Материал' (###class##MaterialLine l) = name(material(l));
+
+uom (###class##MaterialLine l) = uom(material(l));
+nameUom 'UoM' (###class##MaterialLine l) = name(uom(l));
+
+quantityName ''##quantityCaption = DATA NUMERIC[16,3] (###class##MaterialLine);
+
+// Материалы по ТТР. Ифнормационная вкладка
+material 'Материал' (###class sts, Product p) = GROUP MIN material(###class##MaterialLine l) BY class(l), material(l);
+index '№' (###class sts, Product m) = PARTITION SUM 1 ORDER m IF material(sts, m);
+nameMaterial 'Материал' (###class sts, Product p) = name(material(sts, p));
+nameUom 'UoM' (###class sts, Product p) = name(uom(material(sts, p)));
+quantityName ''##quantityCaption (###class sts, Product p) = GROUP SUM quantityName(###class##MaterialLine l) BY class(l), material(l);
+
+calcQuantityServiceMaterial(###class##ServiceLine sl, prevQuantity, quantity) {
+    quantityName(###class##MaterialLine ml) <- quantityName(ml) / (OVERRIDE prevQuantity, 1.0) * (OVERRIDE quantity, 1.0) WHERE class##ServiceLine(ml) == sl;
+    quantityName(sl) <- quantity;
+}
+
+fillServiceMaterial (Service s, ###class##ServiceLine sl) {
+    FOR service(ServiceProductLine pl) == s DO NEW ml = ###class##MaterialLine {
+        class##ServiceLine(ml) <- sl;
+        service(sl) <- service(pl);
+        material(ml) <- product(pl);
+        quantityName(ml) <- OVERRIDE quantity(pl) * quantityName(ml), quantity(pl);
+        quantityName(sl) <- 1;
+    }
+}
+
+CONSTRAINT SETCHANGED(equipment(###class##EquipmentLine l)) AND NOT itemType(equipment(l)) == ItemType.equipment
+    CHECKED BY equipment[###class##EquipmentLine]
+    MESSAGE 'Оборудование не может быть выбрано';
+
+CONSTRAINT SETCHANGED(service(###class##ServiceLine l)) AND NOT itemType(service(l)) == ItemType.service
+    CHECKED BY service[###class##ServiceLine]
+    MESSAGE 'Услуга не может быть выбрана';
+
+CONSTRAINT SETCHANGED(material(###class##MaterialLine l)) AND
+    (PREV(material(l)) AND NOT analog(PREV(material(l)), material(l)) OR NOT itemType(material(l)) == ItemType.material)
+    CHECKED BY material[###class##MaterialLine]
+    MESSAGE 'Материл не может быть выбран, т.к. должен быть в спецификации услуги или быть аналогом';
+
+EXTEND FORM class 
+    //Оборудование
+    OBJECTS el = ###class##EquipmentLine
+    PROPERTIES(el) index, nameEquipment, nameUom, quantityName
+    PROPERTIES(el) NEW, DELETE
+    FILTERS class(el) = object
+
+    OBJECTS esl = ###class##ServiceLine
+    PROPERTIES(esl)  indexEquipmentService READONLY,
+        nameService ON CHANGE {
+            DIALOG services OBJECTS i = service(esl) CHANGE LIST name(i) DO {
+                class(esl) <- object;
+                class##EquipmentLine(esl) <- el;
+                fillServiceMaterial(i, esl);
+            } 
+        }, 
+        nameUom READONLY,
+        quantityName ON CHANGE {
+            INPUT q = NUMERIC[16,3] DO {
+                calcQuantityServiceMaterial(esl, quantityName(esl), q);
+            }
+        }
+    PROPERTIES(esl) NEW, DELETE
+    FILTERS class##EquipmentLine(esl) = el
+
+    OBJECTS esml = ###class##MaterialLine
+    PROPERTIES(esml) index READONLY, nameMaterial, nameUom READONLY, quantityName
+    PROPERTIES(esml) NEW, DELETE
+    FILTERS class##ServiceLine(esml) = esl
+
+    // Услуги
+    OBJECTS sl = ###class##ServiceLine
+    PROPERTIES(sl) index, 
+        nameService ON CHANGE {
+            DIALOG services OBJECTS i = service(sl) CHANGE LIST name(i) DO {
+                class(esl) <- object;
+                fillServiceMaterial(i, sl);
+            }
+        },
+        nameUom, nameEquipment READONLY,
+        quantityName ON CHANGE {
+            INPUT q = NUMERIC[16,3] DO {
+                calcQuantityServiceMaterial(sl, quantityName(sl), q);
+            }
+        }
+    PROPERTIES(sl) NEW, DELETE
+    FILTERS class(sl) = object
+
+    OBJECTS sml = ###class##MaterialLine
+    PROPERTIES(sml) index, nameMaterial, nameUom READONLY, quantityName
+    PROPERTIES(sml) NEW, DELETE
+    FILTERS class##ServiceLine(sml) = sl
+    
+    EDIT ###class OBJECT object
+;
+
+DESIGN class{
+    OBJECTS {
+        details {
+            NEW equipments {
+                caption = 'Оборудование';
+                horizontal = TRUE;
+                MOVE BOX(el);
+                MOVE BOX(esl);
+                MOVE BOX(esml);
+            }
+                        
+            NEW services {
+                caption = 'Работы';
+                horizontal = TRUE;
+                MOVE BOX(sl);
+                MOVE BOX(sml);
+            }
+        }
+    }
+}
+END
+
+@defineDocTemplateType(technicalSolution, s, quantity, 'Количество', 'ТТР');
+EXTEND FORM technicalSolution
+    OBJECTS m = Product
+    PROPERTIES(s, m) READONLY index, nameMaterial, nameUom, quantity
+    FILTERS quantity(s, m)
+;
+DESIGN technicalSolution{
+    OBJECTS {
+        details { 
+            NEW materials {
+                caption = 'Материалы';
+                horizontal = TRUE;
+                MOVE BOX(m);
+            }
+        }
+    }
+}
+
+FORM technicalSolutions 'ТТР'
+    OBJECTS s = TechnicalSolution
+    PROPERTIES(s) READONLY id, name
+    PROPERTIES(s) NEWSESSION NEW, EDIT, DELETE
+
+    OBJECTS sl = TechnicalSolutionServiceLine
+    PROPERTIES(sl)READONLY index, nameService, nameUom, quantity
+    FILTERS technicalSolution(sl) = s
+
+    LIST TechnicalSolution OBJECT s
+;
+
+DESIGN technicalSolutions{
+    OBJECTS {
+        MOVE BOX(s);
+
+        NEW details {
+            tabbed = TRUE;
+            fill = 1;
+            MOVE BOX(sl) {
+                caption = 'Работы';
+            }
+        }
+    }
+}
+
+EXTEND FORM options
+    OBJECTS s = TechnicalSolution
+    PROPERTIES(s) READONLY id, name
+    PROPERTIES(s) NEWSESSION NEW, EDIT, DELETE
+
+    OBJECTS sl = TechnicalSolutionServiceLine
+    PROPERTIES (sl) READONLY index, nameService, nameUom, quantity
+    FILTERS technicalSolution(sl) = s
+;
+
+DESIGN options {
+    tabbedPane {
+        NEW technicalSolutions {
+            caption = 'ТТР';
+            MOVE BOX(s);
+            MOVE BOX(sl) {
+                caption = 'Работы';
+            }
+        }
+    }
+}

@@ -1,6 +1,6 @@
 MODULE ServicePCustom;
 
-REQUIRE ServiceP, Product, ItemCustom;
+REQUIRE ServiceP, Product, ItemCustom, ItemAnalogCustom;
 
 NAMESPACE MasterData;
 
@@ -13,6 +13,8 @@ product = DATA Product (ServiceProductLine) NONULL;
 nameProduct 'Материал' (ServiceProductLine l) = name(product(l));
 nameUom 'UoM' (ServiceProductLine l) = name(uom(product(l)));
 quantity 'Количество' = DATA NUMERIC[16,3] (ServiceProductLine);
+
+in(Service s, Product p) = GROUP MIN ServiceProductLine l IF analog(product(l), p); 
 
 CONSTRAINT SETCHANGED(product(ServiceProductLine l)) AND NOT itemType(product(l)) == ItemType.material
     CHECKED BY product[ServiceProductLine]

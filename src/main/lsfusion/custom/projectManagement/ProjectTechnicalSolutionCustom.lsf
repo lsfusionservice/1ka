@@ -1,0 +1,93 @@
+MODULE ProjectTechnicalSolutionCustom;
+
+REQUIRE Project, TechnicalSolutionCustom;
+
+NAMESPACE ProjectManagement;
+
+CLASS ProjectTechnicalSolutionLine 'Строка ТТР проекта';
+
+project = DATA Project (ProjectTechnicalSolutionLine) NONULL DELETE;
+index '№' = PARTITION SUM 1 ORDER ProjectTechnicalSolutionLine l BY project(l) IN id MATERIALIZED CHARWIDTH 3;
+
+technicalSolution = DATA TechnicalSolution (ProjectTechnicalSolutionLine) NONULL;
+nameTechnicalSolution 'ТТР' (ProjectTechnicalSolutionLine l) = name(technicalSolution(l));
+
+fillByTechnicalSolution ABSTRACT LIST(TechnicalSolution, Project);
+
+EXTEND FORM project
+    OBJECTS stsl = ProjectTechnicalSolutionLine
+    PROPERTIES (stsl) index,
+        nameTechnicalSolution ON CHANGE {
+            DIALOG technicalSolutions OBJECTS s = technicalSolution(stsl) INPUT DO {
+                technicalSolution(stsl) <- s;
+                project(stsl) <- p;
+                fillByTechnicalSolution(s, p);
+            }
+        }, NEW, DELETE
+;
+
+DESIGN project{
+    details {
+        NEW sts {
+            caption = 'ТТР';
+            horizontal = TRUE;
+            MOVE BOX(stsl) {caption = '';}
+        }
+    }
+}
+
+@defineDocTemplateType(project, p, initialDemand, 'Initial demand', 'проекта');
+
+done 'Факт' = DATA NUMERIC[16,3] (ProjectEquipmentLine);
+done 'Факт' = DATA NUMERIC[16,3] (ProjectServiceLine);
+done 'Факт' = DATA NUMERIC[16,3] (ProjectMaterialLine);
+done 'Факт' (Project sts, Product p) = GROUP SUM done(ProjectMaterialLine l) BY project(l), material(l);
+
+EXTEND FORM project
+    PROPERTIES(el) done AFTER  initialDemand(el)
+    PROPERTIES(esl) done AFTER initialDemand(esl)
+    PROPERTIES(esml) done AFTER initialDemand(esml)
+
+    PROPERTIES(sl) done AFTER initialDemand(sl)
+    PROPERTIES(sml) done AFTER initialDemand(sml)
+    
+    OBJECTS m = Product
+    PROPERTIES(p, m) READONLY index, nameMaterial, nameUom, initialDemand, done
+    FILTERS done(p, m) OR initialDemand(p, m)
+;
+DESIGN project{
+    OBJECTS {
+        details {
+            NEW materials {
+                caption = 'Материалы';
+                horizontal = TRUE;
+                MOVE BOX(m);
+            }
+        }
+    }
+}
+
+fillByTechnicalSolution (TechnicalSolution s, Project p) +{    
+    LOCAL projectEquipmentLine = ProjectEquipmentLine (TechnicalSolutionEquipmentLine);    
+    FOR technicalSolution(TechnicalSolutionEquipmentLine el) = s AND p IS Project DO NEW pel = ProjectEquipmentLine {
+        project(pel) <- p;
+        equipment(pel) <- equipment(el);
+        initialDemand(pel) <- quantity(el);
+        projectEquipmentLine(el) <- pel;
+    }
+
+    LOCAL projectServiceLine = ProjectServiceLine (TechnicalSolutionServiceLine);
+    FOR technicalSolution(TechnicalSolutionServiceLine sl) = s AND p IS Project DO NEW psl = ProjectServiceLine {
+        project(psl) <- p;
+        projectEquipmentLine(psl) <- projectEquipmentLine(technicalSolutionEquipmentLine(sl));
+        service(psl) <- service(sl);
+        initialDemand(psl) <- quantity(sl);
+        projectServiceLine(sl) <- psl;
+    }
+
+    FOR technicalSolution(TechnicalSolutionMaterialLine ml) == s AND p IS Project DO NEW pml = ProjectMaterialLine {
+        material(pml) <- material(ml);
+        projectServiceLine(pml) <- projectServiceLine(technicalSolutionServiceLine(ml));
+        initialDemand(pml) <- quantity(ml);
+    }
+}

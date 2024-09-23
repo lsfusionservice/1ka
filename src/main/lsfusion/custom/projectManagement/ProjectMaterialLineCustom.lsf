@@ -1,44 +1,10 @@
 MODULE ProjectMaterialLineCustom;
 
-REQUIRE ProjectCustom, ItemCustom;
+REQUIRE ProjectCustom, ItemCustom, ProjectTechnicalSolutionCustom;
 
 NAMESPACE ProjectManagement;
 
-CLASS ProjectMaterialLine 'Строка материалов проекта';
-
-project = DATA Project (ProjectMaterialLine) NONULL DELETE;
-index '№' = PARTITION SUM 1 ORDER ProjectMaterialLine l BY project(l) IN id MATERIALIZED CHARWIDTH 3;
-
-item = DATA Item (ProjectMaterialLine) NONULL;
-nameItem 'Материал' (ProjectMaterialLine l) = name(item(l));
-
-dataUom = DATA Uom (ProjectMaterialLine);
-uom (ProjectMaterialLine l) = OVERRIDE dataUom(l), uom(item(l));
-nameUom 'UoM' (ProjectMaterialLine l) = name(uom(l));
-
-initialDemand 'Initial demand' = DATA NUMERIC[16,3] (ProjectMaterialLine);
-done 'Quantity (done)' = DATA NUMERIC[16,3] (ProjectMaterialLine);
-
-EXTEND FORM project
-    OBJECTS ml = ProjectMaterialLine
-    PROPERTIES(ml) index, 
-    nameItem ON CHANGE {
-        DIALOG items OBJECTS i = item(ml) CHANGE LIST name(i) FILTERS itemType(i) == ItemType.material DO item(ml) <- i;
-    }, 
-    nameUom, initialDemand, done
-    PROPERTIES(ml) NEW, DELETE
-    FILTERS project(ml) = p
-;
-
-DESIGN project{
-    details {
-        MOVE BOX(ml) {
-            caption = 'Материалы';
-        }
-    }
-}
-
-@defineProjectHistoryLine(project, ProjectMaterialLine, item, 'Изменен материал', nameItem);
-@defineProjectHistoryLineProperty(project, ProjectMaterialLine, uom, 'Материал - изменена ед. изм.', nameItem);
-@defineProjectHistoryLineProperty(project, ProjectMaterialLine, initialDemand, 'Материал - Планируемое кол-во', nameItem);
-@defineProjectHistoryLineProperty(project, ProjectMaterialLine, done, 'Материал - Кол-во (выполненное)', nameItem);
+@defineProjectHistoryLine(project, ProjectMaterialLine, material, 'Изменен материал', nameMaterial);
+@defineProjectHistoryLineProperty(project, ProjectMaterialLine, uom, 'Материал - изменена ед. изм.', nameMaterial);
+@defineProjectHistoryLineProperty(project, ProjectMaterialLine, initialDemand, 'Материал - Планируемое кол-во', nameMaterial);
+@defineProjectHistoryLineProperty(project, ProjectMaterialLine, done, 'Материал - Кол-во (выполненное)', nameMaterial);
