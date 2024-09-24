@@ -63,14 +63,17 @@ DESIGN project{
     details {
         equipments {
             caption = 'Оборудование';
-            horizontal = TRUE;
+//            horizontal = TRUE;
             MOVE BOX(el);
-            NEW linesTab {
+            NEW lines {
                 fill = 1;
-                tabbed = TRUE;
                 MOVE BOX(lotL) {caption = 'Lots';};
-                MOVE BOX(esl) {caption = 'Работы';};
-                MOVE BOX(esml) {caption = 'Материалы';};
+                NEW horizontalLines{
+                    alignment = STRETCH;
+                    horizontal = TRUE;
+                    MOVE BOX(esl) {caption = 'Работы';};
+                    MOVE BOX(esml) {caption = 'Материалы';};
+                }
             }
         }            
     }
