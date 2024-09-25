@@ -212,27 +212,36 @@ DESIGN technicalSolution{
     }
 }
 
-FORM technicalSolutions 'ТТР'
+FORM dialogTechnicalSolutions 'ТТР'
     OBJECTS s = TechnicalSolution
     PROPERTIES(s) READONLY id, name
-    PROPERTIES(s) NEWSESSION NEW, EDIT, DELETE
 
     OBJECTS sl = TechnicalSolutionServiceLine
     PROPERTIES(sl)READONLY index, nameService, nameUom, quantity
     FILTERS technicalSolution(sl) = s
 
-    LIST TechnicalSolution OBJECT s
+    OBJECTS sml = TechnicalSolutionMaterialLine
+    PROPERTIES(sml) index, nameMaterial, nameUom READONLY, quantity
+    FILTERS technicalSolutionServiceLine(sml) = sl
 ;
 
-DESIGN technicalSolutions{
+DESIGN dialogTechnicalSolutions{
     OBJECTS {
-        MOVE BOX(s);
+        MOVE BOX(s){
+            REMOVE TOOLBARBOX(s);
+        }
 
         NEW details {
-            tabbed = TRUE;
             fill = 1;
+            horizontal = TRUE;
+            
             MOVE BOX(sl) {
                 caption = 'Работы';
+                REMOVE TOOLBARBOX(sl);
+            }
+            MOVE BOX(sml) {
+                caption = 'Материалы';
+                REMOVE TOOLBARBOX(sml);
             }
         }
     }
