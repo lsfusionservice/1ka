@@ -1,6 +1,6 @@
 MODULE ProjectTechnicalSolutionCustom;
 
-REQUIRE Project, TechnicalSolutionCustom;
+REQUIRE Project, TechnicalSolutionCustom, ProjectCustom;
 
 NAMESPACE ProjectManagement;
 
@@ -18,12 +18,14 @@ EXTEND FORM project
     OBJECTS stsl = ProjectTechnicalSolutionLine
     PROPERTIES (stsl) index,
         nameTechnicalSolution ON CHANGE {
-            DIALOG technicalSolutions OBJECTS s = technicalSolution(stsl) INPUT DO {
+            DIALOG dialogTechnicalSolutions OBJECTS s = technicalSolution(stsl) INPUT DO {
                 technicalSolution(stsl) <- s;
                 project(stsl) <- p;
                 fillByTechnicalSolution(s, p);
             }
         }, NEW, DELETE
+    FILTERS project(stsl) == p
+    
 ;
 
 DESIGN project{
@@ -43,12 +45,36 @@ done 'Факт' = DATA NUMERIC[16,3] (ProjectServiceLine);
 done 'Факт' = DATA NUMERIC[16,3] (ProjectMaterialLine);
 done 'Факт' (Project sts, Product p) = GROUP SUM done(ProjectMaterialLine l) BY project(l), material(l);
 
+calcDoneServiceMaterial(ProjectServiceLine sl, quantity) {
+    done(sl) <- quantity;
+    done(ProjectMaterialLine ml) <- initialDemand(ml) / initialDemand(sl) * quantity WHERE projectServiceLine(ml) == sl;
+}
+
+calcDoneService(ProjectEquipmentLine el, quantity) {
+    done(el) <- quantity;
+    done(ProjectServiceLine sl) <- initialDemand(sl) / initialDemand(el) * quantity WHERE projectEquipmentLine(sl) == el;
+    done(ProjectMaterialLine ml) <- initialDemand(ml) / initialDemand(projectServiceLine(ml)) * done(projectServiceLine(ml)) WHERE projectEquipmentLine(projectServiceLine(ml)) == el;
+}
+
 EXTEND FORM project
-    PROPERTIES(el) done AFTER  initialDemand(el)
-    PROPERTIES(esl) done AFTER initialDemand(esl)
+    PROPERTIES(el) done AFTER  initialDemand(el) ON CHANGE {
+        INPUT q = NUMERIC[16,3] DO {
+            calcDoneService(el, q);
+        }
+    }
+    
+    PROPERTIES(esl) done AFTER initialDemand(esl) ON CHANGE {
+        INPUT q = NUMERIC[16,3] DO {
+            calcDoneServiceMaterial(sl, q);
+        }
+    }
     PROPERTIES(esml) done AFTER initialDemand(esml)
 
-    PROPERTIES(sl) done AFTER initialDemand(sl)
+    PROPERTIES(sl) done AFTER initialDemand(sl) ON CHANGE {
+        INPUT q = NUMERIC[16,3] DO {
+            calcDoneServiceMaterial(sl, q);
+        }
+    }
     PROPERTIES(sml) done AFTER initialDemand(sml)
     
     OBJECTS m = Product
@@ -91,3 +117,5 @@ fillByTechnicalSolution (TechnicalSolution s, Project p) +{
         initialDemand(pml) <- quantity(ml);
     }
 }
+
+@defineProjectHistoryLine(project, ProjectTechnicalSolutionLine, technicalSolution, 'Изменено ТТР', nameTechnicalSolution);

@@ -55,8 +55,6 @@ EXTEND FORM project
     PROPERTIES (el, lotL) done READONLYIF NOT useLot(product(lotL)), nameTechnicalSolution
     PROPERTIES (lotL) EDIT
     FILTERS done(el, lotL)
-
-    PROPERTIES (lotL) DELETE GRID
 ;
 
 DESIGN project{
@@ -69,6 +67,7 @@ DESIGN project{
                 fill = 1;
                 MOVE BOX(lotL) {caption = 'Lots';};
                 NEW horizontalLines{
+                    fill = 1;
                     alignment = STRETCH;
                     horizontal = TRUE;
                     MOVE BOX(esl) {caption = 'Работы';};

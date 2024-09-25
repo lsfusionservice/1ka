@@ -161,7 +161,7 @@ META defineProjectHistoryLine(doc, docLine, class, changeCapt, descProperty)
             user(h) <- currentUser();
             computer(h) <- currentComputer();
             type(h) <- 'Added line';
-            description (h) <- CONCAT '', index(l), descProperty(l);
+            description (h) <- CONCAT '. ', index(l), descProperty(l);
         }
     }
 
@@ -173,7 +173,7 @@ META defineProjectHistoryLine(doc, docLine, class, changeCapt, descProperty)
             user(h) <- currentUser();
             computer(h) <- currentComputer();
             type(h) <- 'Removed line';
-            description (h) <- CONCAT ' ', PREV(index(l)), PREV(descProperty(l));
+            description (h) <- CONCAT '. ', PREV(index(l)), PREV(descProperty(l));
         }
     }
 
