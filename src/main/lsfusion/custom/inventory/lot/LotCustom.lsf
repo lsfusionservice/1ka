@@ -1,0 +1,48 @@
+MODULE LotCustom;
+
+REQUIRE Lot, LotStatusCustom;
+
+NAMESPACE Inventory;
+
+createdDateTime 'Дата создания' = DATA DATETIME (Lot);
+changedDateTime 'Дата изменения' = DATA DATETIME (Lot);
+status 'Статус' = DATA LotStatus (Lot);
+nameStatus 'Статус' (Lot l) = name(status(l));
+
+coordinateX 'Координата X' = DATA NUMERIC[16,3](Lot);
+coordinateY 'Координата Y' = DATA NUMERIC[16,3](Lot);
+
+WHEN SET(Lot l IS Lot) DO {
+    createdDateTime(l) <- currentDateTime();
+    changedDateTime(l) <- currentDateTime();
+}
+
+WHEN CHANGED(id(Lot l)) OR CHANGED(product(l)) OR CHANGED(status(l)) OR CHANGED(coordinateX(l)) OR CHANGED(coordinateY(l)) DO {
+    changedDateTime(l) <- currentDateTime();
+}
+
+EXTEND FORM lot 
+    PROPERTIES(l) createdDateTime READONLY, changedDateTime READONLY, nameStatus, coordinateX, coordinateY
+;
+
+DESIGN lot {
+    caption = badged('Lot', id(l));
+    OBJECTS {
+        statusPane {
+            status {
+                MOVE PROPERTY(nameStatus(l));
+            }
+        }
+        header {
+            MOVE PROPERTY(createdDateTime(l));
+            MOVE PROPERTY(changedDateTime(l));
+            MOVE PROPERTY(coordinateX(l));
+            MOVE PROPERTY(coordinateY(l));
+        }
+    }
+}
+
+EXTEND FORM lots 
+    PROPERTIES(l) READONLY createdDateTime, changedDateTime, nameStatus, coordinateX, coordinateY
+;
+
