@@ -1,0 +1,45 @@
+MODULE LotStatusCustom;
+
+REQUIRE Lot;
+
+NAMESPACE Inventory;
+
+CLASS LotStatus 'Статус партии';
+
+id '{ID}' = DATA STRING[20] (LotStatus);
+name '{Name}' = DATA ISTRING[50] (LotStatus) NONULL CHARWIDTH 15;
+lotStatus = GROUP AGGR LotStatus t BY id(t);
+
+FORM lotStatus 'Статус партии'
+    OBJECTS s = LotStatus PANEL
+    PROPERTIES(s) name, id
+
+    EDIT LotStatus OBJECT s;
+;
+
+DESIGN lotStatus {
+    OBJECTS {
+        NEW tabbedPane {
+            fill = 1;
+            tabbed = TRUE;
+        }
+    }
+}
+
+FORM projectStatuses 'Статусы партии'
+    OBJECTS s = LotStatus
+    PROPERTIES(s) READONLY name, id
+    LIST LotStatus OBJECT s
+;
+
+EXTEND FORM options
+    OBJECTS ls = LotStatus
+    PROPERTIES(ls) READONLY name, id
+    PROPERTIES(ls) NEWSESSION NEW, EDIT, DELETE
+;
+
+DESIGN options {
+    tabbedPane {
+        MOVE BOX(ls) { caption = 'Статусы партии'; }
+    }
+}
