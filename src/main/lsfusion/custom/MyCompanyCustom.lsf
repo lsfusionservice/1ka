@@ -10,4 +10,4 @@ REQUIRE Eval, ProcessMonitor, Backup,
         BrigadeEmployeeRoleCustom, BrigadeCustom, TechnicalSolutionCustom, ProjectTechnicalSolutionCustom,
         ItemAnalogCustom, ServicePCustom,
 
-        LotCustom, LotStatusCustom;
+        LotCustom, LotStatusCustom, LotInterfaceCustom;

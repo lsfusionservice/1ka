@@ -1,0 +1,124 @@
+MODULE LotInterfaceCustom;
+
+REQUIRE Lot;
+
+NAMESPACE MasterData;
+
+CLASS LotInterface 'Интерфейс';
+
+id '{ID}' = DATA STRING[50] (LotInterface) IN id CHARWIDTH 8;
+lotInterface (STRING[50] id) = GROUP AGGR LotInterface i BY id(i);
+
+index '№' (LotInterface i) = PARTITION SUM 1 ORDER i AS LotInterface MATERIALIZED CHARWIDTH 2;
+lotInterface (INTEGER ii) = GROUP LAST LotInterface i ORDER i BY index(i);
+
+nonull 'Required' = DATA BOOLEAN (LotInterface);
+
+dominant 'Доминирующий' = DATA BOOLEAN (LotInterface);
+inName 'В наименовании' = DATA BOOLEAN (LotInterface);
+
+name '{Name}' = DATA ISTRING[50] (LotInterface) IN id NONULL;
+
+// available categories
+set 'Incl.' = DATA BOOLEAN (LotInterface, Category);
+
+// recursive
+valid (LotInterface i, Category c) = GROUP LAST set(i, Category cc) ORDER DESC level(c, cc);
+
+FORM interfaces 'Интерфейсы'
+    OBJECTS i = LotInterface
+    PROPERTIES(i) READONLY index, id, name, dominant, inName, nonull
+    PROPERTIES(i) NEWSESSION NEW, EDIT, DELETE
+
+    LIST LotInterface OBJECT i
+;
+
+FORM interface 'Интерфейс'
+    OBJECTS i = LotInterface PANEL
+    PROPERTIES(i) name, id, dominant, inName, nonull
+
+    TREE categories c = Category PARENT parent(c)
+    PROPERTIES name(c) READONLY, set(i, c) BACKGROUND (GROUP SUM 1 IF set(i, Category cc) AND level(cc, c))
+    ORDERS name(c)
+    FILTERGROUP activeCategory
+        FILTER '{Active}' active(c) DEFAULT
+
+    EDIT LotInterface OBJECT i
+;
+
+DESIGN interface {
+    OBJECTS {
+        NEW pane {
+            fill = 1;
+            horizontal = TRUE;
+            NEW interface {
+                fill = 1;
+                NEW name {
+                    caption = 'Settings';
+                    MOVE PROPERTY(name(i));
+                    MOVE PROPERTY(id(i));
+                    MOVE PROPERTY(dominant(i));
+                    MOVE PROPERTY(inName(i));
+                    MOVE PROPERTY(nonull(i));
+                }
+            }
+            NEW details {
+                tabbed = TRUE;
+                fill = 5;
+                MOVE BOX(TREE categories) {
+                    caption = 'Categories';
+                }
+            }
+        }
+    }
+}
+
+NAVIGATOR {
+    operations {
+        NEW interfaces;
+    }
+}
+
+category(Lot l) = category(product(l));
+
+// interface value
+value 'Value' = DATA STRING (Lot, LotInterface) INDEXED;
+
+CONSTRAINT nonull(LotInterface i) AND NOT value(Lot l, i) AND valid(i, category(l)) AND NOT SET(nonull(i))
+    MESSAGE 'Обязательный интерфейс';
+
+readonly = ABSTRACT BOOLEAN (Lot, LotInterface);
+
+EXTEND FORM lot
+    OBJECTS i = LotInterface
+    PROPERTIES name(i) READONLY,
+        value(l, i) READONLYIF readonly(l, i) BACKGROUND
+            IF readonly(l, i) THEN RGB(223,223,223) ELSE
+            (RGB(245,184,184) IF NOT value(l, i) AND nonull(i))
+    FILTERS valid(i, category(l))
+;
+
+DESIGN lot {
+    tabs {
+        MOVE BOX(i) { caption = 'Интерфейсы'; }
+    }
+}
+
+// index values
+value (Lot l, INTEGER index) = value(l, lotInterface(index));
+
+interface1(Lot l) = value(l, 1);
+interface2(Lot l) = value(l, 2);
+interface3(Lot l) = value(l, 3);
+interface4(Lot l) = value(l, 4);
+interface5(Lot l) = value(l, 5);
+interface6(Lot l) = value(l, 6);
+interface7(Lot l) = value(l, 7);
+interface8(Lot l) = value(l, 8);
+interface9(Lot l) = value(l, 9);
+
+META defineInterfaceForm (form, obj)
+    EXTEND FORM form
+        PROPERTIES(obj) READONLY interface1, interface2, interface3, interface4, interface5, interface6, interface7, interface8, interface9
+    ;
+END
