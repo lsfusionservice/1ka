@@ -1,0 +1,47 @@
+MODULE LotComponentInterfaceCustom;
+
+REQUIRE LotInterfaceCustom, OperationLotCustom, LotComponentCustom;
+
+NAMESPACE Inventory;
+
+dominantValue(Lot parent, LotInterface i) = GROUP LAST value(Lot l, i) ORDER dateTimeLastOperation(parent, l), lastOperation(parent, l) IF dominant(i) AND value(l, i) AND lot(l);
+hierachyValue (Lot parent, LotInterface i) = OVERRIDE value(parent, i), dominantValue(parent, i);
+index '№' (Lot l, LotInterface  i)  = PARTITION SUM 1 ORDER i AS LotInterface IF hierachyValue(l, i) CHARWIDTH 2;
+
+lotInterface (Lot l, INTEGER ii) = GROUP LAST LotInterface i ORDER i IF hierachyValue(l, i) BY index(l, i);
+value (Lot l, INTEGER index) = hierachyValue(l, lotInterface(l, index));
+
+nameInterface(Lot l, INTEGER index) = name(lotInterface(l, index));
+
+interface1(Lot l) = value(l, 1);
+interface2(Lot l) = value(l, 2);
+interface3(Lot l) = value(l, 3);
+interface4(Lot l) = value(l, 4);
+interface5(Lot l) = value(l, 5);
+interface6(Lot l) = value(l, 6);
+interface7(Lot l) = value(l, 7);
+interface8(Lot l) = value(l, 8);
+interface9(Lot l) = value(l, 9);
+
+EXTEND FORM lot
+    PROPERTIES(l) READONLY interface1 SHOWIF interface1(l), interface2 SHOWIF interface2(l), interface3 SHOWIF interface3(l), 
+        interface4 SHOWIF interface4(l), interface5 SHOWIF interface5(l), interface6 SHOWIF interface6(l), interface7 SHOWIF interface7(l), 
+        interface8 SHOWIF interface8(l), interface9 SHOWIF interface9(l)
+;
+
+DESIGN lot {
+    OBJECTS {
+        NEW interfaces AFTER header {
+            caption = 'Интерфейсы';
+            MOVE PROPERTY(interface1(l)) {caption = nameInterface(l, 1);};
+            MOVE PROPERTY(interface2(l)) {caption = nameInterface(l, 2);};
+            MOVE PROPERTY(interface3(l)) {caption = nameInterface(l, 3);};
+            MOVE PROPERTY(interface4(l)) {caption = nameInterface(l, 4);};
+            MOVE PROPERTY(interface5(l)) {caption = nameInterface(l, 5);};
+            MOVE PROPERTY(interface6(l)) {caption = nameInterface(l, 6);};
+            MOVE PROPERTY(interface7(l)) {caption = nameInterface(l, 7);};
+            MOVE PROPERTY(interface8(l)) {caption = nameInterface(l, 8);};
+            MOVE PROPERTY(interface9(l)) {caption = nameInterface(l, 9);};
+        }
+    }
+}

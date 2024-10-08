@@ -2,7 +2,7 @@ MODULE LotInterfaceCustom;
 
 REQUIRE Lot;
 
-NAMESPACE MasterData;
+NAMESPACE Inventory;
 
 CLASS LotInterface 'Интерфейс';
 
@@ -103,22 +103,3 @@ DESIGN lot {
         MOVE BOX(i) { caption = 'Интерфейсы'; }
     }
 }
-
-// index values
-value (Lot l, INTEGER index) = value(l, lotInterface(index));
-
-interface1(Lot l) = value(l, 1);
-interface2(Lot l) = value(l, 2);
-interface3(Lot l) = value(l, 3);
-interface4(Lot l) = value(l, 4);
-interface5(Lot l) = value(l, 5);
-interface6(Lot l) = value(l, 6);
-interface7(Lot l) = value(l, 7);
-interface8(Lot l) = value(l, 8);
-interface9(Lot l) = value(l, 9);
-
-META defineInterfaceForm (form, obj)
-    EXTEND FORM form
-        PROPERTIES(obj) READONLY interface1, interface2, interface3, interface4, interface5, interface6, interface7, interface8, interface9
-    ;
-END
