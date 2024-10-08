@@ -1,0 +1,22 @@
+MODULE OperationLotDeleteCustom;
+
+REQUIRE OperationLotCustom, LotComponentCustom;
+
+NAMESPACE Inventory;
+
+@defineOperation(LotDelete, 'Удаление комплектующей партии', ordered);
+@defineOperationLot(LotDelete, 'удаления');
+
+description (OperationLotDelete o) += 'Удаление комплектующей партии' IF o IS OperationLotDelete;
+
+newOperationLotDelete 'Удаление комплектующей партии' (Lot parent, Lot l) {
+    NEW o = OperationLotDelete {
+        lot(l) <- NULL;
+        lot(o) <- parent;
+        component(o) <- l;
+    }
+}
+
+deleteLotComponent (Lot parent, Lot l) + {
+    newOperationLotDelete(parent, l);
+}

@@ -1,0 +1,35 @@
+MODULE OperationCustom;
+
+REQUIRE Employee, Icon, DateUtils;
+
+PRIORITY MasterData;
+
+NAMESPACE Inventory;
+
+CLASS ABSTRACT Operation 'Операция';
+TABLE operation (Operation);
+
+dateTime 'Время' = ABSTRACT DATETIME (Operation) MATERIALIZED;
+@defineDateTimeAggregation(Operation);
+
+employee 'Сотрудник' = ABSTRACT Employee (Operation) MATERIALIZED;
+nameEmployee 'Сотрудник' (Operation o) = Authentication.name(employee(o));
+
+description 'Описание' = ABSTRACT ISTRING (Operation) MATERIALIZED;
+
+META defineOperation (id, caption, statusId)
+    CLASS Operation###id caption : Operation;
+
+    dateTime 'Время' = DATA DATETIME (Operation###id) NONULL INDEXED;
+    dateTime(Operation###id o) <- currentDateTime() WHEN SET(o IS Operation###id);
+    date 'Дата' (Operation###id o) = DATE(dateTime(o)) MATERIALIZED INDEXED;
+    time 'Время' (Operation###id o) = TIME(dateTime(o));
+    dateTime(Operation###id o) += dateTime(o);
+
+    employee = DATA Employee (Operation###id) NONULL;
+    employee(Operation###id o) <- currentUser() WHEN SET(o IS Operation###id);
+    employee(Operation###id o) += employee(o);
+END
+
+
+
