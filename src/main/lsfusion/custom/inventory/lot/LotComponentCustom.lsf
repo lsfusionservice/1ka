@@ -1,0 +1,31 @@
+MODULE LotComponentCustom;
+
+REQUIRE Lot;
+
+NAMESPACE Inventory;
+
+lot = DATA Lot (Lot);
+indexLotComponent '№' = PARTITION SUM 1 ORDER Lot l BY lot(l) IN id MATERIALIZED CHARWIDTH 3;
+
+addLotComponent ABSTRACT (Lot, Lot);
+addLotComponent 'Добавить' (Lot parent) {
+    DIALOG lots OBJECTS l INPUT FILTERS NOT lot(l) AND l IS Lot DO {
+        addLotComponent(parent, l);
+    }
+}  IMAGE 'add.png';
+
+deleteLotComponent 'Удалить' ABSTRACT (Lot, Lot) IMAGE 'delete.png';
+
+EXTEND FORM lot
+    OBJECTS c = Lot
+    PROPERTIES(c) READONLY indexLotComponent, id, idProduct, nameProduct
+    PROPERTIES addLotComponent(l) DRAW c TOOLBAR
+    PROPERTIES(l, c) deleteLotComponent DRAW c TOOLBAR
+    FILTERS lot(c) == l
+;
+
+DESIGN lot {
+    tabs {       
+        MOVE BOX(c){ caption = 'Комплектующие';};
+    }
+}

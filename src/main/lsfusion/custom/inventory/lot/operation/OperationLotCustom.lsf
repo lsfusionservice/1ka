@@ -1,0 +1,67 @@
+MODULE OperationLotCustom;
+
+REQUIRE Lot, OperationCustom;
+
+NAMESPACE Inventory;
+
+lot = ABSTRACT Lot (Operation) MATERIALIZED;
+INDEX lot(Operation o), dateTime(o), o;
+idLot 'Код партии' (Operation o) = id(lot(o));
+
+component 'Комплектующая' = ABSTRACT Lot (Operation) MATERIALIZED;
+idComponent 'Код комплектующей' (Operation o) = id(component(o));
+
+prevOperation (Operation o) = PARTITION PREV o ORDER dateTime(o), o BY lot(o) MATERIALIZED INDEXED;
+dateTimePrevOperation 'Время предыдущей операции' (Operation o) = dateTime(prevOperation(o));
+
+product 'Product' (Operation o) = product(lot(o));
+nameProduct 'Product' (Operation o) = nameProduct(lot(o));
+
+lastOperation (Lot l) = GROUP LAST Operation o ORDER dateTime(o), o BY lot(o) MATERIALIZED INDEXED;
+dateTimeLastOperation 'Время последней операции' (Lot l) = dateTime(lastOperation(l));
+
+lastOperation (Lot parent, Lot l) = GROUP LAST Operation o ORDER dateTime(o), o BY lot(o), component(o) MATERIALIZED INDEXED;
+dateTimeLastOperation 'Время последней операции' (Lot parent, Lot l) = dateTime(lastOperation(parent, l));
+
+employeeLastOperation 'Сотрудник последней операции' (Lot l) = employee(lastOperation(l));
+
+EXTEND FORM lot
+    OBJECTS o = Operation
+    PROPERTIES(o) READONLY idLot, idComponent, dateTimePrevOperation, dateTime, nameEmployee, nameProduct, description
+    ORDERS dateTime(o) DESC
+    FILTERS lot(o) = l;
+;
+
+DESIGN lot {
+    tabs {
+        MOVE BOX(o);
+        caption = 'Операции';
+    }
+}
+
+@defineDateTimeAggregationForm(lot, o);
+
+META defineOperationLot (oper, caption)
+    lot 'Lot' = DATA Lot (Operation###oper) NONULL MATERIALIZED INDEXED;
+    lot(Operation###oper o) += lot(o);
+    idLot 'Lot' (Operation###oper o) = id(lot(o));
+
+    component 'Lot' = DATA Lot (Operation###oper) NONULL MATERIALIZED INDEXED;
+    component(Operation###oper o) += component(o);
+    idComponent 'Lot' (Operation###oper o) = id(component(o));
+
+    INDEX lot(Operation###oper o), dateTime(o), o;
+
+    product 'Product' (Operation###oper o) = product(lot(o));
+    nameProduct 'Product' (Operation###oper o) = nameProduct(lot(o));
+
+    lastOperation###oper (Lot l) = GROUP LAST Operation###oper o ORDER dateTime(o), o BY lot(o) MATERIALIZED INDEXED;
+    dateTimeLastOperation###oper 'Время '##caption (Lot l) = dateTime(lastOperation###oper(l));
+
+    lastOperation###oper##Component (Lot parent, Lot l) = GROUP LAST Operation###oper o ORDER dateTime(o), o BY component(o), lot(o)  MATERIALIZED INDEXED;
+    dateTimeLastOperation###oper##Component 'Время '##caption (Lot parent, Lot l) = dateTime(lastOperation###oper##Component(parent, l));    
+        
+    EXTEND FORM lots
+        PROPERTIES(l) READONLY dateTimeLastOperation###oper
+    ;
+END
