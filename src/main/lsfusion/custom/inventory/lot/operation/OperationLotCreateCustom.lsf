@@ -1,0 +1,22 @@
+MODULE OperationLotCreateCustom;
+
+REQUIRE OperationLotCustom, LotComponentCustom;
+
+NAMESPACE Inventory;
+
+@defineOperation(LotCreate, 'Добавление комплектующей партии', ordered);
+@defineOperationLot(LotCreate, 'добавления');
+
+description (OperationLotCreate o) += 'Добаление комплектующей партии' IF o IS OperationLotCreate;
+
+newOperationLotCreate'Добаление комплектующей партии' (Lot parent, Lot l) {
+    NEW o = OperationLotCreate {
+        lot(l) <- parent;        
+        lot(o) <- parent;
+        component(o) <- l;
+    }
+}
+
+addLotComponent (Lot parent, Lot l) + {
+    newOperationLotCreate(parent, l);
+}
