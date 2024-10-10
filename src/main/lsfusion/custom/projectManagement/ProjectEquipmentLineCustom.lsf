@@ -29,8 +29,8 @@ doneLotLeft (ProjectEquipmentLine rl) = done(rl) - OVERRIDE doneLot(rl), 0;
 
 doneLot 'Lot initial demand' (Project p) = GROUP SUM done(ProjectEquipmentLine l, Lot lot) IF project(l) = p;
 
-technicalSolution 'ТТР' = DATA TechnicalSolution (ProjectEquipmentLine, Lot);
-nameTechnicalSolution 'ТТР' (ProjectEquipmentLine l, Lot lot) = name(technicalSolution(l, lot));
+technicalSolution 'Спецификация' = DATA TechnicalSolution (ProjectEquipmentLine, Lot);
+nameTechnicalSolution 'Спецификация' (ProjectEquipmentLine l, Lot lot) = name(technicalSolution(l, lot));
 
 in (Project p, TechnicalSolution s) = GROUP MIN TRUE IF ProjectTechnicalSolutionLine sl AND project(sl) == p AND s == technicalSolution(sl);
 

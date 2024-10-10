@@ -10,7 +10,7 @@ project = DATA Project (ProjectTechnicalSolutionLine) NONULL DELETE;
 index '№' = PARTITION SUM 1 ORDER ProjectTechnicalSolutionLine l BY project(l) IN id MATERIALIZED CHARWIDTH 3;
 
 technicalSolution = DATA TechnicalSolution (ProjectTechnicalSolutionLine) NONULL;
-nameTechnicalSolution 'ТТР' (ProjectTechnicalSolutionLine l) = name(technicalSolution(l));
+nameTechnicalSolution 'Спецификации' (ProjectTechnicalSolutionLine l) = name(technicalSolution(l));
 
 fillByTechnicalSolution ABSTRACT LIST(TechnicalSolution, Project);
 
@@ -31,7 +31,7 @@ EXTEND FORM project
 DESIGN project{
     details {
         NEW sts {
-            caption = 'ТТР';
+            caption = 'Спецификации';
             horizontal = TRUE;
             MOVE BOX(stsl) {caption = '';}
         }
