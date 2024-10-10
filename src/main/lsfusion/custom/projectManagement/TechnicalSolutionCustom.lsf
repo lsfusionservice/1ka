@@ -5,12 +5,12 @@ REQUIRE Product, ServicePCustom, ProjectManagementSettings;
 NAMESPACE ProjectManagement;
 
 // типовое техническое решение
-CLASS TechnicalSolution 'ТТР';
+CLASS TechnicalSolution 'Спецификация';
 
 id '{ID}' = DATA STRING[100] (TechnicalSolution) CHARWIDTH 15;
 name '{Name}' = DATA ISTRING[100] (TechnicalSolution) CHARWIDTH 15;
 
-FORM technicalSolution 'ТТР'
+FORM technicalSolution 'Спецификация'
     OBJECTS s = TechnicalSolution PANEL
     PROPERTIES(s) id, name
 ;
@@ -194,7 +194,7 @@ DESIGN class{
 }
 END
 
-@defineDocTemplateType(technicalSolution, s, quantity, 'Количество', 'ТТР');
+@defineDocTemplateType(technicalSolution, s, quantity, 'Количество', 'Спецификация');
 EXTEND FORM technicalSolution
     OBJECTS m = Product
     PROPERTIES(s, m) READONLY index, nameMaterial, nameUom, quantity
@@ -212,7 +212,7 @@ DESIGN technicalSolution{
     }
 }
 
-FORM dialogTechnicalSolutions 'ТТР'
+FORM dialogTechnicalSolutions 'Спецификации'
     OBJECTS s = TechnicalSolution
     PROPERTIES(s) READONLY id, name
 
@@ -260,7 +260,7 @@ EXTEND FORM options
 DESIGN options {
     tabbedPane {
         NEW technicalSolutions {
-            caption = 'ТТР';
+            caption = 'Спецификации';
             MOVE BOX(s);
             MOVE BOX(sl) {
                 caption = 'Работы';
