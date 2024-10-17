@@ -88,6 +88,7 @@ CONSTRAINT nonull(LotInterface i) AND NOT value(Lot l, i) AND valid(i, category(
     MESSAGE 'Обязательный интерфейс';
 
 readonly = ABSTRACT BOOLEAN (Lot, LotInterface);
+showInterface = ABSTRACT BOOLEAN (Lot, LotInterface);
 
 EXTEND FORM lot
     OBJECTS i = LotInterface
@@ -95,7 +96,7 @@ EXTEND FORM lot
         value(l, i) READONLYIF readonly(l, i) BACKGROUND
             IF readonly(l, i) THEN RGB(223,223,223) ELSE
             (RGB(245,184,184) IF NOT value(l, i) AND nonull(i))
-    FILTERS valid(i, category(l))
+    FILTERS valid(i, category(l)) OR showInterface(l, i)
 ;
 
 DESIGN lot {
