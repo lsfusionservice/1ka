@@ -1,0 +1,7 @@
+MODULE ReceiptInvCustom;
+
+REQUIRE ReceiptInv, InvLedgerCustom, ReceiptCustom;
+
+NAMESPACE Inventory;
+
+project(ReceiptInvLedger l) += nameReceiptLineProject(line(l));

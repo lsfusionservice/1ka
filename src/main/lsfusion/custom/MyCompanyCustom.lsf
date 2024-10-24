@@ -36,5 +36,6 @@ REQUIRE Eval, ProcessMonitor, Backup,
         InventoryReport, InventoryValuation, ProductMoves,
 
         LotCustom, LotStatusCustom, LotInterfaceCustom, LotComponentCustom,
-        OperationCustom, OperationLotCustom, OperationLotCreateCustom, OperationLotDeleteCustom, LotComponentInterfaceCustom
+        OperationCustom, OperationLotCustom, OperationLotCreateCustom, OperationLotDeleteCustom, LotComponentInterfaceCustom, 
+        InvLedgerCustom, ReceiptCustom, ReceiptInvCustom, ProductMovesCustom
 ;

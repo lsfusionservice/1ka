@@ -1,0 +1,7 @@
+MODULE InvLedgerCustom;
+
+REQUIRE InvLedger;
+
+NAMESPACE Inventory;
+
+project 'Project' = ABSTRACT STRING (InvLedger) CHARWIDTH 20 MATERIALIZED;

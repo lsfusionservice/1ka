@@ -1,0 +1,9 @@
+MODULE ProductMovesCustom;
+
+REQUIRE InvLedgerCustom, ProductMoves;
+
+NAMESPACE Inventory;
+
+EXTEND FORM productMoves
+    PROPERTIES (il) project AFTER type(il)
+;

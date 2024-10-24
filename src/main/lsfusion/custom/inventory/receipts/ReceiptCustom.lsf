@@ -1,0 +1,65 @@
+MODULE ReceiptCustom;
+
+REQUIRE Receipt, Project, SystemEvents;
+
+NAMESPACE Inventory;
+
+receiptProject = DATA Project (Receipt);
+nameReceiptProject 'Project' (Receipt r) = name(receiptProject(r));
+
+receiptLineProject = DATA Project (ReceiptLine);
+receiptLineProjectOver (ReceiptLine rl) = OVERRIDE receiptLineProject(rl), receiptProject(receipt(rl)) IF type(rl) = receiptType('PJ');
+nameReceiptLineProject 'Project' (ReceiptLine l) = name(receiptLineProjectOver(l));
+
+EXTEND FORM receipt
+    PROPERTIES(l) nameReceiptLineProject AFTER index(l)
+    PROPERTIES(r) nameReceiptProject AFTER nameVendor(r) SHOWIF type(r) = receiptType('PJ')
+;
+
+DESIGN receipt {
+    headerRight {
+        MOVE PROPERTY(nameVendor(r));
+        MOVE PROPERTY(vendorReference(r));
+        MOVE PROPERTY(nameReceiptProject(r));
+        MOVE PROPERTY(nameLocation(r)) { notNull = TRUE; }
+    }
+}
+WHEN SET (name(Project p)) AND NOT (GROUP SUM 1 IF name(Location l) = name(p)) DO {
+    NEW l = Location {
+        id(l) <- name(p);
+        name(l) <- name(p);
+        parent(l) <- location('PJ00001');
+    }
+    APPLY;
+}
+
+WHEN LOCAL (SETCHANGED(type(Receipt r)) OR SETCHANGED(receiptProject(r))) AND type(r) = receiptType('PJ') DO {
+    location(r) <- location(nameReceiptProject(r));
+};
+
+onStarted() + {
+    IF NOT location('PJ00001') THEN {
+        NEW l = Location {
+            id(l) <- 'PJ00001';
+            name(l) <- 'Основной склад (проекты)';
+        }
+        APPLY;
+    }
+
+    IF NOT (GROUP SUM 1 IF receiptType('PJ')) THEN {
+        NEW t = ReceiptType {
+            name(t) <- 'На проект';
+            id(t) <- 'PJ';
+        }
+        APPLY;
+    }
+
+    FOR (name(Project p)) AND NOT GROUP SUM 1 IF name(Location l) = name(p) DO {
+        NEW l = Location {
+            id(l) <- name(p);
+            name(l) <- name(p);
+            parent(l) <- location('PJ00001');
+        }
+        APPLY;
+    }
+}
