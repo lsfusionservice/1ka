@@ -24,7 +24,8 @@ DESIGN receipt {
         MOVE PROPERTY(nameLocation(r)) { notNull = TRUE; }
     }
 }
-WHEN SET (name(Project p)) AND NOT (GROUP SUM 1 IF name(Location l) = name(p)) DO {
+
+WHEN SET (name(Project p)) AND NOT (GROUP SUM 1 IF location(name(p))) DO {
     NEW l = Location {
         id(l) <- name(p);
         name(l) <- name(p);
@@ -54,7 +55,7 @@ onStarted() + {
         APPLY;
     }
 
-    FOR (name(Project p)) AND NOT GROUP SUM 1 IF name(Location l) = name(p) DO {
+    FOR (name(Project p)) AND NOT (GROUP SUM 1 IF location(name(p))) DO {
         NEW l = Location {
             id(l) <- name(p);
             name(l) <- name(p);
